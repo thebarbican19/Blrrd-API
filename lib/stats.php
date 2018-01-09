@@ -24,7 +24,7 @@ function user_posts($user) {
 function user_total_time($user) {
 	global $database_connect;
 		
-	$time_query = mysqli_query($database_connect ,"");
+	$time_query = mysqli_query($database_connect ,"SELECT * FROM `uploads`");
 	$time_count = mysqli_num_rows($time_query);
 	
 	return $time_count;
