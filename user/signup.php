@@ -13,7 +13,12 @@ $passed_password = $passed_data['password'];
 $passed_encryptpassword = password_hash($passed_password ,PASSWORD_BCRYPT);
 $passed_username = $passed_data['username'];
 $passed_type = $passed_data['type'];
+$passed_country = $passed_data['country'];
+$passed_language = $passed_data['language'];
 
+if ($authorized_type == "admin") $passed_type = $passed_data['type'];
+else $passed_type = "user";
+	
 if ($passed_method == 'POST') {
 	if (empty($passed_email)) {
 		$json_status = 'email parameter missing';
@@ -68,26 +73,28 @@ if ($passed_method == 'POST') {
 			}
 			else {
 				$user_key = "user_" . generate_key();
-				//$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_email`, `user_password`, `user_name`, `user_actualname`, `user_slack`, `user_customer`, `user_avatar`, `user_device`, `user_city`, `user_country`, `user_language`) VALUES (NULL, '$user_key', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'active', '$passed_type', '$passed_email', '$passed_encryptpassword', '$passed_username', '', '$passed_slack', '', '$user_ovatar', '$passed_device', '', '$session_country', '$session_language');");
+				$user_signup = date('Y-m-d H:i:s');			
+				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_public`, `user_language`, `user_country`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '$passed_encryptpassword', '', '', '$passed_email', '1', '$passed_language', '$passed_country');");
 				
 				if ($user_create) {
 					$bearer_token = "at_" . generate_key();	
 					$bearer_expiry = date('Y-m-d H:i:s', strtotime('+100 days'));
-					$bearer_output = array("expiry" => $bearer_expiry, "token" => $bearer_token, 'scope' => explode(",", $bearer_scope));
-					$bearer_create = mysqli_query($database_connect, "INSERT INTO `access` (`access_id`, `access_created`, `access_expiry`, `access_token`, `access_user`, `access_app`, `access_scope`) VALUES (NULL, CURRENT_TIMESTAMP, '$bearer_expiry', '$bearer_token', '$user_key', '$session_application', '$bearer_scope');");
+					$bearer_timestamp = date('Y-m-d H:i:s');
+					$bearer_output = array("expiry" => $bearer_expiry, "token" => $bearer_token);
+					$bearer_injection = "INSERT INTO `access` (`access_id`, `access_created`, `access_expiry`, `access_token`, `access_user`) VALUES (NULL, '$bearer_timestamp', '$bearer_expiry', '$bearer_token', '$user_key');";
+					$bearer_create = mysqli_query($database_connect, $bearer_injection);
 					if ($bearer_create) {
-						$user_stats = user_stats();
-						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "ovatar" => $user_ovatar, "langauge" => $session_language, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats);
-									
-						$friendship_blrrdid = "blrdapp";
-						$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$friendship_blrrdid', '$authorized_user');");
+						$user_stats = user_stats($user_key);
+						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats);
+							
+						$friendship_timestamp = date('Y-m-d H:i:s');
+						$friendship_blrrdid = "user_sHv7E2MSUEuUt5Jk2R48rVedOSPDpvx5a0Wa";
+						$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$friendship_blrrdid', '$user_key');");
 		
 						$json_status = $passed_email . ' created';
 						$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);
 						echo json_encode($json_output);
 						exit;
-						
-					
 						
 					}
 					else {

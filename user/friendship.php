@@ -17,7 +17,14 @@ if ($passed_method == 'GET') {
 	$friendship_query = mysqli_query($database_connect, "SELECT * FROM `follow` LEFT JOIN users on follow.follow_user LIKE users.user_key WHERE `follow_owner` LIKE '$authorized_user' ORDER BY `follow_timestamp` DESC LIMIT $passed_pagenation, $passed_limit");
 	$friendship_count = mysqli_num_rows($friendship_query);
 	while($row = mysqli_fetch_array($friendship_query)) {
-		$friendship_user = array("userid" => $row['follow_user'], "avatar" => "NEED-TO-ADD", "username" => "NEED-TO-ADD", "lastactive" => "NEED-TO-ADD");	
+		$friendship_avatar = "https://ovatar.io/" . $row['user_email'];
+		$friendship_username = $row['user_name'];
+		$friendship_lastactive = $row['user_lastactive'];
+		$friendship_userid = $row['user_key'];
+		$friendship_user = array("userid" => $friendship_userid, 
+								 "avatar" => $friendship_avatar, 
+								 "username" => $friendship_username, 
+								 "lastactive" => $friendship_lastactive);	
 		$friendship_output[] = array("timestamp" => $row['follow_timestamp'], "user" => $friendship_user);
 		
 	}

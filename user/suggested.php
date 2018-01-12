@@ -14,10 +14,11 @@ if (empty($passed_limit)) $passed_limit = 40;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 
 if ($passed_method == 'GET') {
-	if (count($passed_emails) == 0) {
+	if (count($passed_emails) == 0 || empty($_GET['emails'])) {
 		$time_expiry = date('Y-m-d H:i:s', strtotime('-50 days'));
-		$time_query = mysqli_query($database_connect, "SELECT `time_added`, `time_post`, `time_user`, `time_seconds`, `upload_key`, `upload_owner` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_added` > '$time_expiry' WHERE `time_seconds` > '0' GROUP BY `time_post` ORDER BY `time_seconds` DESC LIMIT $passed_pagenation, $passed_limit");
-		while($row = mysql_fetch_array($time_query)) {	
+		$time_injection = "SELECT `time_added`, `time_post`, `time_user`, `time_seconds`, `upload_key`, `upload_owner` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_added` > '$time_expiry' AND `time_seconds` > '0' GROUP BY `time_post` ORDER BY `time_seconds` DESC LIMIT $passed_pagenation, $passed_limit";
+		$time_query = mysqli_query($database_connect, $time_injection);
+		while($row = mysqli_fetch_array($time_query)) {	
 			$user_keys[] = $row['upload_owner'];
 			
 		}
@@ -55,7 +56,7 @@ if ($passed_method == 'GET') {
 	if (count($user_output) == 0) $user_output = array();		
 			
 	$json_status = count($user_output) . " users returned";
-	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $user_output);
+	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $user_output, 'sql' => $time_injection);
 	echo json_encode($json_output);
 	exit;
 	

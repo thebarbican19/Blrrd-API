@@ -32,19 +32,19 @@ if ($passed_method == 'GET') {
 	}
 	else {
 		if ($passed_type == "following") {
-			$follower_query = mysqli_query($database_connect, "SELECT `follow_user`, `follow_owner` FROM `follow` WHERE `follow_owner` LIKE '$authorized_user' LIMIT 0, 1");
+			$follower_query = mysqli_query($database_connect, "SELECT `follow_user`, `follow_owner` FROM `follow` WHERE `follow_owner` LIKE '$authorized_user'");
 			$follower_count = mysqli_num_rows($follower_query);
 			if ($follower_count > 0) {
-				$follower_injection = " AND (";
-				while($row = mysql_fetch_array($follower_query)) {	
-					$follower_injection .= "`user_key` LIKE '" . $row['follow_user'] . "' OR ";
+				$follower_injection = "AND (";
+				while($row = mysqli_fetch_array($follower_query)) {	
+					$follower_injection .= "`upload_owner` LIKE '" . $row['follow_user'] . "' OR ";
 					
 				}
 				
-				//remove last OR
+				$follower_injection = substr($follower_injection, 0, strlen($follower_injection) - 4);
 				$follower_injection .= ") ";
 				
-				$timeline_injection = "SELECT * FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post WHERE `upload_removed` = '0' $follower_injection ORDER BY `upload_timestamp` DESC";
+				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_key ORDER BY `upload_timestamp` DESC";
 				
 			}
 			else {
@@ -58,7 +58,7 @@ if ($passed_method == 'GET') {
 						
 		}
 		else if ($passed_type == "trending") {
-			$timeline_injection = "SELECT * FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE 'time_seconds' > '1' AND 'upload_removed' = '0' GROUP BY `time_post`";
+			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 			
 		}
 		
@@ -66,14 +66,18 @@ if ($passed_method == 'GET') {
 		$timeline_query = mysqli_query($database_connect, $timeline_injection);
 		$timeline_items = mysqli_num_rows($timeline_query);
 		while($row = mysqli_fetch_array($timeline_query)) {
-			$timeline_user = array("userid" => $row['follow_user'], "avatar" => "NEED-TO-ADD", "username" => "NEED-TO-ADD", "lastactive" => "NEED-TO-ADD");	
-			$timeline_output[] = array("timestamp" => $row['upload_timestamp'], 
-									   "postid" => $row['upload_key'], 
-									   "caption" => $row['upload_key'], 
-									   "imageurl" => $row['upload_image'], 
-									   "channel" => $row['upload_channel'], 
+			$timeline_user = array("userid" => (string)$row['user_key'], 
+								 "avatar" => (string)$row['user_avatar'],
+								 "username" => (string)$row['user_name'],
+								 "lastactive" => $row['user_lastactive']);	
+			$timeline_timestamp = $row['upload_timestamp'] . " " . $row['upload_timezone'];
+			$timeline_output[] = array("timestamp" => $timeline_timestamp, 
+									   "postid" => (string)$row['upload_key'], 
+									   "caption" => (string)$row['upload_caption'], 
+									   "imageurl" => (string)$row['upload_file'], 
+									   "channel" => (string)$row['upload_channel'], 
 									   "user" => $timeline_user, 
-									   "seconds" => (int)$row['time_seconds']);
+									   "seconds" => (int)$row['upload_time']);
 			
 		
 		}
