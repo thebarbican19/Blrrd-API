@@ -10,53 +10,69 @@ $passed_limit = $_GET['limit'];
 $passed_pagenation = $_GET['pangnation'];
 $passed_emails = explode(",", $_GET['emails']);
 
-if (empty($passed_limit)) $passed_limit = 40;
+if (empty($passed_limit)) $passed_limit = 55;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 
 if ($passed_method == 'GET') {
 	if (count($passed_emails) == 0 || empty($_GET['emails'])) {
 		$time_expiry = date('Y-m-d H:i:s', strtotime('-50 days'));
-		$time_injection = "SELECT `time_added`, `time_post`, `time_user`, `time_seconds`, `upload_key`, `upload_owner` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_added` > '$time_expiry' AND `time_seconds` > '0' GROUP BY `time_post` ORDER BY `time_seconds` DESC LIMIT $passed_pagenation, $passed_limit";
+		$time_injection = "SELECT `user_key`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_owner ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 		$time_query = mysqli_query($database_connect, $time_injection);
 		while($row = mysqli_fetch_array($time_query)) {	
-			$user_keys[] = $row['upload_owner'];
+			$user_keys[] = $row['user_key'];
 			
 		}
 		
 		if (count($user_keys) > 0) {
-			$user_injection = " AND (";
+			$user_injection = "AND (";
 			foreach ($user_keys as $user) {
 				$user_injection .= "`user_key` LIKE '$user' OR ";
 				
 			}
 			
-			$user_injection = ")";
+			$user_injection = substr($user_injection, 0, strlen($user_injection) - 4);
+			$user_injection .= ")";
 			
 		}
 		
 	}
 	else {
-		$user_injection = " AND (";
+		$user_injection = "AND (";
 		foreach ($passed_emails as $email) {
 			$user_injection .= "`user_email` LIKE '$email' OR ";
 			
 		}
 		
-		$user_injection = ")";
+		$user_injection = substr($user_injection, 0, strlen($user_injection) - 4);
+		$user_injection .= ")";
 		
 	}
 	
-	$user_query  =  mysqli_query($database_connect, "SELECT `user_key`, `user_handle`, `user_avatar`, `user_lastactive` FROM `users` WHERE `user_key` LIKE '$user' $user_injection LIMIT 0, 1");
+	$user_injection = "SELECT `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_email` FROM `users` WHERE `user_status` LIKE 'active' $user_injection LIMIT $passed_pagenation, $passed_limit";
+	$user_query  =  mysqli_query($database_connect, $user_injection);
 	$user_count = mysqli_num_rows($user_query);
 	while($row = mysqli_fetch_array($user_query)) {	
-		$user_output[] = array("userid" => $user_data['user_key'], "avatar" => $user_data['user_avatar'], "username" => $user_data['user_handle'], "lastactive" => $user_data['user_lastactive']);
+		$user_data = array("userid" => $row['user_key'], 
+							   "avatar" => $row['user_avatar'], 
+							   "username" => $row['user_name'], 
+							   "lastactive" => $row['user_lastactive']);
+			
+		if (count($passed_emails) > 0 && !empty($_GET['emails'])) {
+			$user_append = array("email" => $row['user_email']);
+			$user_output[] = array_merge($user_data, $user_append);
+			
+		} 
+		else {
+			$user_output[] = array_merge($user_data);
+		
+		}		
 			
 	}
 	
 	if (count($user_output) == 0) $user_output = array();		
 			
 	$json_status = count($user_output) . " users returned";
-	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $user_output, 'sql' => $time_injection);
+	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $user_output);
 	echo json_encode($json_output);
 	exit;
 	
