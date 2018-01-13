@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_email = $passed_data['email'];
+$passed_email = mysqli_real_escape_string($database_connect, $passed_data['email']);
 $passed_password = $passed_data['password'];
 $passed_encryptpassword = password_hash($passed_password ,PASSWORD_BCRYPT);
 
@@ -58,6 +58,8 @@ if ($passed_method == 'POST') {
 				$bearer_injection = "INSERT INTO `access` (`access_id`, `access_created`, `access_expiry`, `access_token`, `access_user`) VALUES (NULL, '$bearer_timestamp', '$bearer_expiry', '$bearer_token', '$user_key');";
 				$bearer_create = mysqli_query($database_connect, $bearer_injection);
 				if ($bearer_create)	 {
+					header('HTTP/1.1 200 SUCSESSFUL');
+											
 					$user_output = array("key" => $user_key, "username" => $user_name, "email" => $user_email, "type" => $user_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => $user_signup, "auth" => $bearer_output, "stats" => $user_stats);
 						
 					$json_status = 'user logged in';
@@ -99,6 +101,8 @@ if ($passed_method == 'POST') {
 elseif ($passed_method == 'DELETE') {
 	$destroy_token = mysqli_query($database_grado_connect ,"DELETE FROM `access` WHERE `access_token` LIKE '$session_bearer';");
 	if ($destroy_token) {
+		header('HTTP/1.1 200 SUCSESSFUL');
+								
 		$json_status = 'access token destroyed';
 		$json_output[] = array('status' => $json_status, 'error_code' => 200);
 		echo json_encode($json_output);

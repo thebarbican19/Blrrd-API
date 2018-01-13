@@ -4,9 +4,11 @@ require '../lib/auth.php';
 require '../lib/vendor/autoload.php';
 
 use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 header('Content-Type: application/json');
 
+$passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_image = $_GET['id'];
 $passed_size = $_GET['size'];
 $passed_format = $_GET['format'];
@@ -29,15 +31,40 @@ if ($passed_method == 'GET') {
 		
 	}
 	
-	if (empty($passed_format) || $passed_format == "image") {
+	
+	$client_key = "AKIAIQNEGJPW4HZ64K5A";
+	$client_secret = "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";
+	$client_bucket = "blrrd-images";	
+	$client = S3Client::factory(array('credentials' => array('key' => $client_key, 'secret' => $client_secret), 'version' => 'latest', 'region'  => 'eu-central-1'));
 		
+	if ($passed_format == "image" || empty($passed_format)) {
+		$object_url = $client->getObjectUrl($client_bucket, $passed_image);
+		$object_content = file_get_contents($object_url);
+
+		header('Content-Type: image/jpeg');
 		
+		echo $object_content;
 		
 	}
 	else {
-		
+		if ($authorized_type == "admin") {
+			$object_output = $client->getObject(array('Bucket' => $client_bucket, 'Key' => $passed_image));
+			//print_r($object_output['Metadata']);
+			//print_r($object_output);
+					
+		}
+		else {
+			header('HTTP/1.1 401 UNAUTHORIZED');
+
+			$json_status = 'you do not have permission to access this endpoint';
+			$json_output[] = array('status' => $json_status, 'error_code' => 401);
+			echo json_encode($json_output);
+			exit;
+			
+		}
+				
 	}
-	
+		
 }
 else {
 	$json_status = $passed_method . ' methods are not supported in the api';

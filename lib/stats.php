@@ -47,4 +47,16 @@ function user_total_followers($user) {
 	
 }
 
+function user_following($user) {
+	global $database_connect;
+	global $authorized_user;
+	
+	$follower_query = mysqli_query($database_connect ,"SELECT * FROM `follow` WHERE `follow_user` LIKE '$user' AND `follow_owner` LIKE '$authorized_user'");
+	$follower_count = mysqli_num_rows($follower_query);
+	
+	if ($follower_count == 1) return true;
+	else return false;
+	
+}
+
 ?>

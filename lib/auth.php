@@ -63,8 +63,9 @@ if (!in_array($session_page, $session_auth_exclude) || isset($session_bearer)) {
 			$authorized_token = $authorized_data['access_token'];
 			$authorized_type = $authorized_data['user_type'];
 			$authorized_signupdate = $authorized_data['user_signup'];
-			$authorized_lastactive = $authorized_data['user_lastactive'];			
-			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = CURRENT_TIMESTAMP WHERE `user_key` LIKE '$authorized_user';");
+			$authorized_lastactive = $authorized_data['user_lastactive'];	
+			$autorized_updated = date('Y-m-d H:i:s');	
+			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated' WHERE `user_key` LIKE '$authorized_user';");
 					
 		}
 		

@@ -91,6 +91,8 @@ if ($passed_method == 'POST') {
 						$friendship_blrrdid = "user_sHv7E2MSUEuUt5Jk2R48rVedOSPDpvx5a0Wa";
 						$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$friendship_blrrdid', '$user_key');");
 		
+						header('HTTP/1.1 200 SUCSESSFUL');
+												
 						$json_status = $passed_email . ' created';
 						$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);
 						echo json_encode($json_output);
@@ -154,6 +156,8 @@ else if ($passed_method == 'DELETE') {
 		else {
 			$user_remove = mysqli_query($database_connect, "UPDATE `users` SET `user_status` = 'deactivated' WHERE `user_key` LIKE '$authuser_key';");
 			if ($user_remove) {
+				header('HTTP/1.1 200 SUCSESSFUL');
+										
 				$json_status = 'user deactivated';
 				$json_output[] = array('status' => $json_status, 'error_code' => 200);
 				echo json_encode($json_output);

@@ -28,6 +28,8 @@ if ($passed_method == 'GET') {
 	
 	if (count($time_output) == 0) $time_output = array();		
 	
+	header('HTTP/1.1 200 SUCSESSFUL');
+							
 	$json_status = 'returned ' . count($time_output) . ' notifications';
 	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $time_output);
 	echo json_encode($json_output);
@@ -77,6 +79,8 @@ else if ($passed_method == 'POST') {
 				$time_added = date('Y-m-d H:i:s');
 				$time_post = mysqli_query($database_connect, "INSERT INTO `time` (`time_id`, `time_added`, `time_post`, `time_user`, `time_seconds`) VALUES (NULL, '$time_added', '$passed_postid', '$authorized_user', '$passed_time');");
 				if ($time_post)	{	
+					header('HTTP/1.1 200 SUCSESSFUL');
+											
 					$json_status = $passed_time . ' seconds added to post';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);
 					echo json_encode($json_output);

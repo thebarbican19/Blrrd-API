@@ -6,8 +6,8 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_limit = $_GET['limit'];
-$passed_pagenation = $_GET['pangnation'];
+$passed_limit = (int)$_GET['limit'];
+$passed_pagenation = (int)$_GET['pangnation'];
 $passed_type = $_GET['type'];
 
 if (empty($passed_limit)) $passed_limit = 40;
@@ -83,6 +83,9 @@ if ($passed_method == 'GET') {
 		}
 		
 		if (count($timeline_output) == 0) $timeline_output = array();		
+		
+		
+		header('HTTP/1.1 200 SUCSESSFUL');
 		
 		$json_status = 'returned ' . count($timeline_output) . ' posts';
 		$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $timeline_output);

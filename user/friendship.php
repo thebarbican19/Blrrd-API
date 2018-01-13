@@ -6,8 +6,8 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_limit = $_GET['limit'];
-$passed_pagenation = $_GET['pangnation'];
+$passed_limit = (int)$_GET['limit'];
+$passed_pagenation = (int)$_GET['pangnation'];
 $passed_userid = $passed_data['userid'];
 
 if (empty($passed_limit)) $passed_limit = 40;
@@ -56,6 +56,8 @@ else if ($passed_method == 'POST') {
 				$friendship_timestamp = date();
 				$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$passed_userid', '$authorized_user');");
 				if ($friendship_create) {
+					header('HTTP/1.1 200 SUCSESSFUL');
+											
 					$json_status = 'user followed!';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);
 					echo json_encode($json_output);
@@ -108,6 +110,8 @@ else if ($passed_method == 'DELETE') {
 	else {
 		$friendship_destroy = mysqli_query($database_connect, "DELETE FROM `follow` WHERE `follow_id` = '$follow_id';");
 		if ($friendship_destroy) {
+			header('HTTP/1.1 200 SUCSESSFUL');
+									
 			$json_status = 'user unfollowed!';
 			$json_output[] = array('status' => $json_status, 'error_code' => 200);
 			echo json_encode($json_output);
