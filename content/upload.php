@@ -13,9 +13,7 @@ $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_caption = strip_tags($passed_data['caption']);
 $passed_caption = mysqli_real_escape_string($database_connect, $passed_caption);
-//$passed_file = $passed_data['file'];
-$passed_file_content = file_get_contents("../promo.png");
-$passed_file = base64_encode($passed_file_content);
+$passed_file = $passed_data['file'];
 $passed_id = $passed_data['postid'];
 	
 if ($passed_method == 'POST') {

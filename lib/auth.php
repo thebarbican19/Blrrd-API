@@ -1,6 +1,8 @@
 <?
 
-$database_connect = mysqli_connect('localhost', 'root', 'root'); 
+if ($_SERVER['HTTP_HOST'] == "localhost:8888") $database_connect = mysqli_connect('localhost', 'root', 'root'); //localhost
+else $database_connect = mysqli_connect('localhost', 'root', 'Blrrd2017**'); //production
+
 if (!$database_connect) { 
 	header('HTTP/ 400 HOST ERROR', true, 400);
 		
@@ -62,9 +64,11 @@ if (!in_array($session_page, $session_auth_exclude) || isset($session_bearer)) {
 			$authorized_email = $authorized_data['user_email'];		
 			$authorized_token = $authorized_data['access_token'];
 			$authorized_type = $authorized_data['user_type'];
+			$authorized_avatar = $authorized_data['user_avatar'];
 			$authorized_signupdate = $authorized_data['user_signup'];
 			$authorized_lastactive = $authorized_data['user_lastactive'];	
 			$autorized_updated = date('Y-m-d H:i:s');	
+			$autorized_userpublic = (bool)$user_data['user_public'];			
 			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated' WHERE `user_key` LIKE '$authorized_user';");
 					
 		}

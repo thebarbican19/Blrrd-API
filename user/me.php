@@ -2,7 +2,7 @@
 
 include '../lib/auth.php';
 include '../lib/stats.php';
-//include '../lib/push.php';
+include '../lib/push.php';
 
 header('Content-Type: application/json');
 
@@ -16,7 +16,7 @@ else $user_key = $authuser_key;
 
 if ($passed_method == 'GET') {
 	$user_stats = user_stats($user_key);			
-	$user_output = array("key" => $authorized_user, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats);
+	$user_output = array("key" => $authorized_user, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats, "public" => $autorized_userpublic);
 											
 	$json_status = 'user data returned';
 	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);
@@ -95,7 +95,7 @@ elseif ($passed_method == 'PUT') {
 				
 			}
 			else {
-				//submit_device($authuser_username, $passed_value);
+				submit_device($passed_value);
 				$update_injection = "`user_device` = '" . $passed_value . "'";	
 				
 			}	

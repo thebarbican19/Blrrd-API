@@ -47,6 +47,17 @@ function user_total_followers($user) {
 	
 }
 
+
+function user_posts_time($post) {
+	global $database_connect;
+		
+	$posts_query = mysqli_query($database_connect ,"SELECT upload_key, SUM(time.time_seconds) AS upload_score FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_key` LIKE '$post' GROUP BY upload_key");
+	$posts_data = mysqli_fetch_assoc($posts_query);	
+	
+	return (int)$posts_data['upload_score'];
+	
+}
+
 function user_following($user) {
 	global $database_connect;
 	global $authorized_user;

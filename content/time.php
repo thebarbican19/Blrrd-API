@@ -1,6 +1,8 @@
 <?php
 
 include '../lib/auth.php';
+include '../lib/push.php';
+include '../lib/stats.php';
 
 header('Content-Type: application/json');
 
@@ -60,7 +62,7 @@ else if ($passed_method == 'POST') {
 		if ($post_exists == 1)	{
 			$post_data = mysqli_fetch_assoc($post_query);
 			$post_removed = (int)$post_data['upload_removed'];
-			$post_user = $post_data['upload_user'];
+			$post_user = $post_data['upload_owner'];
 			if ($post_removed == 1) {
 				$json_status = 'post does not exist';
 				$json_output[] = array('status' => $json_status, 'error_code' => 409);
@@ -76,13 +78,33 @@ else if ($passed_method == 'POST') {
 				
 			}
 			else {
+				$time_total_before = user_posts_time($passed_postid);				
 				$time_added = date('Y-m-d H:i:s');
 				$time_post = mysqli_query($database_connect, "INSERT INTO `time` (`time_id`, `time_added`, `time_post`, `time_user`, `time_seconds`) VALUES (NULL, '$time_added', '$passed_postid', '$authorized_user', '$passed_time');");
 				if ($time_post)	{	
 					header('HTTP/1.1 200 SUCSESSFUL');
-											
+					
+					$post_total_after = user_posts_time($passed_postid);
+					if ($post_total_after > 180 && $time_total_before < 180) {
+						$push_user = $post_data['upload_owner'];
+						$push_payload = array();
+						$push_title = "🔥 Hot Stuff!";
+						$push_body =  "Your post was just promoted to the hot feed!";
+						
+					}
+					else {
+						$push_user = $post_data['upload_owner'];
+						$push_payload = array();
+						$push_title = "⏳ You got time!";
+						if ($passed_time == 1) $push_body = $authorized_username . " viewed your post for " . $passed_time . " second";
+						else $push_body =  $authorized_username . " viewed your post for " . $passed_time . " seconds";
+						
+					}
+					
+					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
+				
 					$json_status = $passed_time . ' seconds added to post';
-					$json_output[] = array('status' => $json_status, 'error_code' => 200);
+					$json_output[] = array('status' => $json_status, 'error_code' => 200, 'push' => $push_output);
 					echo json_encode($json_output);
 					exit;
 					

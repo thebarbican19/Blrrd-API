@@ -85,7 +85,7 @@ if ($passed_method == 'POST') {
 					$bearer_create = mysqli_query($database_connect, $bearer_injection);
 					if ($bearer_create) {
 						$user_stats = user_stats($user_key);
-						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats);
+						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats, "public" => true);
 							
 						$friendship_timestamp = date('Y-m-d H:i:s');
 						$friendship_blrrdid = "user_sHv7E2MSUEuUt5Jk2R48rVedOSPDpvx5a0Wa";
