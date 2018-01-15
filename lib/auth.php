@@ -1,7 +1,8 @@
-<?
+<?php
 
-if ($_SERVER['HTTP_HOST'] == "localhost:8888") $database_connect = mysqli_connect('localhost', 'root', 'root'); //localhost
-else $database_connect = mysqli_connect('localhost', 'root', 'Blrrd2017**'); //production
+//if ($_SERVER['HTTP_HOST'] == "localhost:8888") 
+	$database_connect = mysqli_connect('localhost', 'root', 'root'); //localhost
+//else $database_connect = mysqli_connect('localhost', 'root', 'Blrrd2017**'); //production
 
 if (!$database_connect) { 
 	header('HTTP/ 400 HOST ERROR', true, 400);
@@ -33,7 +34,7 @@ else if (!empty($_GET['tok'])) $session_bearer = $_GET['tok'];
 $session_method = $_SERVER['REQUEST_METHOD'];
 $session_auth_exclude = array("login", "signup");
 
-if (!in_array($session_page, $session_auth_exclude) || isset($session_bearer)) {
+if (!in_array($session_page, $session_auth_exclude) && isset($session_bearer)) {
 	if (empty($session_bearer)) {	
 		header('HTTP/1.1 401 UNAUTHORIZED');
 

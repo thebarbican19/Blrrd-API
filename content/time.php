@@ -17,14 +17,14 @@ if ($passed_method == 'GET') {
 	if (empty($passed_limit)) $passed_limit = 20;
 	if (empty($passed_pagenation)) $passed_pagenation = 0;
 
-	if (empty($passed_postid)) $time_injection = "SELECT * FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_user` LIKE '$authorized_user'";
-	else $time_injection = "SELECT * FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_post` LIKE '$passed_postid' AND `time_user` LIKE '$authorized_user'";
+	if (empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_user` LIKE '$authorized_user'";
+	else $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_post` LIKE '$passed_postid' AND `time_user` LIKE '$authorized_user'";
 	
 	$time_injection .= " ORDER BY `time_added` DESC LIMIT $passed_pagenation, $passed_limit";
 	$time_query = mysqli_query($database_connect, $time_injection);
 	$time_items_count = mysqli_num_rows($time_query);
 	while($row = mysqli_fetch_array($time_query)) {	
-		$time_output[] = array("postid" => $row['time_post'], "userid" => $row['time_user'], "timestamp" => $row['time_added'], "seconds" => (int)$row['time_seconds']);
+		$time_output[] = array("postid" => $row['time_post'], "userid" => $row['time_user'], "timestamp" => $row['time_added'], "seconds" => (int)$row['time_seconds'], "imageurl" => $row['upload_file']);
 		
 	}
 	
@@ -104,7 +104,7 @@ else if ($passed_method == 'POST') {
 					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
 				
 					$json_status = $passed_time . ' seconds added to post';
-					$json_output[] = array('status' => $json_status, 'error_code' => 200, 'push' => $push_output);
+					$json_output[] = array('status' => $json_status, 'error_code' => 200);
 					echo json_encode($json_output);
 					exit;
 					

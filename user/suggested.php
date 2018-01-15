@@ -10,13 +10,14 @@ $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_limit = $_GET['limit'];
 $passed_pagenation = $_GET['pangnation'];
 $passed_emails = strip_tags($_GET['emails']); 
+$passed_search = strip_tags($_GET['search']); 
 $passed_emails_array = explode(",", $passed_emails);
 
 if (empty($passed_limit)) $passed_limit = 55;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 
 if ($passed_method == 'GET') {
-	if (count($passed_emails_array) == 0 || empty($passed_emails)) {
+	if ((count($passed_emails_array) == 0 || empty($passed_emails)) && empty($passed_search)) {
 		$time_expiry = date('Y-m-d H:i:s', strtotime('-50 days'));
 		$time_injection = "SELECT `user_key`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_owner ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 		$time_query = mysqli_query($database_connect, $time_injection);
@@ -36,6 +37,10 @@ if ($passed_method == 'GET') {
 			$user_injection .= ")";
 			
 		}
+		
+	}
+	else if (!empty($passed_search)) {
+		$user_injection = "AND (`user_email` LIKE '$passed_search' OR `user_name` LIKE '%$passed_search%')";
 		
 	}
 	else {

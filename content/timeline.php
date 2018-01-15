@@ -44,7 +44,7 @@ if ($passed_method == 'GET') {
 				$follower_injection = substr($follower_injection, 0, strlen($follower_injection) - 4);
 				$follower_injection .= ") ";
 				
-				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_key ORDER BY `upload_timestamp` DESC";
+				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
 				
 			}
 			else {
@@ -58,7 +58,7 @@ if ($passed_method == 'GET') {
 						
 		}
 		else if ($passed_type == "trending") {
-			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
+			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 			
 		}
 		

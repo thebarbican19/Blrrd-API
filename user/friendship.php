@@ -53,11 +53,18 @@ else if ($passed_method == 'POST') {
 			$follow_query = mysqli_query($database_connect, "SELECT * FROM `follow` WHERE `follow_user` LIKE '$passed_userid' AND `follow_owner` LIKE '$authorized_user'");
 			$follow_exists = mysqli_num_rows($follow_query);
 			if ($follow_exists == 0) {
-				$friendship_timestamp = date();
+				$friendship_timestamp = date('Y-m-d H:i:s');
 				$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$passed_userid', '$authorized_user');");
 				if ($friendship_create) {
 					header('HTTP/1.1 200 SUCSESSFUL');
-											
+							
+					$push_user = $passed_userid;
+					$push_payload = array();
+					$push_title = "🎉 New Follower!";
+					$push_body = $authorized_username . " just followed you";
+				
+					$push_output = sent_push_to_user($passed_userid, $push_payload, $push_title, $push_body);
+					
 					$json_status = 'user followed!';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);
 					echo json_encode($json_output);
