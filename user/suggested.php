@@ -7,8 +7,8 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_limit = $_GET['limit'];
-$passed_pagenation = $_GET['pangnation'];
+$passed_limit = (int)$_GET['limit'];
+$passed_pagenation = (int)$_GET['pagnation'];
 $passed_emails = strip_tags($_GET['emails']); 
 $passed_search = strip_tags($_GET['search']); 
 $passed_emails_array = explode(",", $passed_emails);
@@ -16,10 +16,12 @@ $passed_emails_array = explode(",", $passed_emails);
 if (empty($passed_limit)) $passed_limit = 55;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 
+$passed_pagenation = $passed_pagenation * $passed_limit;
+
 if ($passed_method == 'GET') {
 	if ((count($passed_emails_array) == 0 || empty($passed_emails)) && empty($passed_search)) {
 		$time_expiry = date('Y-m-d H:i:s', strtotime('-50 days'));
-		$time_injection = "SELECT `user_key`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY upload_owner ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
+		$time_injection = "SELECT `user_key`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection  GROUP BY upload_owner ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 		$time_query = mysqli_query($database_connect, $time_injection);
 		while($row = mysqli_fetch_array($time_query)) {	
 			$user_keys[] = $row['user_key'];
@@ -59,7 +61,7 @@ if ($passed_method == 'GET') {
 		
 	}
 	
-	$user_injection = "SELECT `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_email` FROM `users` WHERE `user_status` LIKE 'active' $user_injection LIMIT $passed_pagenation, $passed_limit";
+	$user_injection = "SELECT `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_email` FROM `users` WHERE `user_status` LIKE 'active' AND `user_key` NOT LIKE '$authorized_user' $user_injection LIMIT $passed_pagenation, $passed_limit";
 	$user_query  =  mysqli_query($database_connect, $user_injection);
 	$user_count = mysqli_num_rows($user_query);
 	while($row = mysqli_fetch_array($user_query)) {	

@@ -1,8 +1,7 @@
 <?php
 
-//if ($_SERVER['HTTP_HOST'] == "localhost:8888") 
-	$database_connect = mysqli_connect('localhost', 'root', 'root'); //localhost
-//else $database_connect = mysqli_connect('localhost', 'root', 'Blrrd2017**'); //production
+if ($_SERVER['HTTP_HOST'] == "localhost:8888") $database_connect = mysqli_connect('localhost', 'root', 'root'); //localhost
+else $database_connect = mysqli_connect('localhost', 'root', 'Blrrd2017**'); //production
 
 if (!$database_connect) { 
 	header('HTTP/ 400 HOST ERROR', true, 400);
@@ -34,7 +33,7 @@ else if (!empty($_GET['tok'])) $session_bearer = $_GET['tok'];
 $session_method = $_SERVER['REQUEST_METHOD'];
 $session_auth_exclude = array("login", "signup");
 
-if (!in_array($session_page, $session_auth_exclude) && isset($session_bearer)) {
+if (!in_array($session_page, $session_auth_exclude)) {
 	if (empty($session_bearer)) {	
 		header('HTTP/1.1 401 UNAUTHORIZED');
 
@@ -65,7 +64,8 @@ if (!in_array($session_page, $session_auth_exclude) && isset($session_bearer)) {
 			$authorized_email = $authorized_data['user_email'];		
 			$authorized_token = $authorized_data['access_token'];
 			$authorized_type = $authorized_data['user_type'];
-			$authorized_avatar = $authorized_data['user_avatar'];
+			$authorized_avatar = "https://www.gravatar.com/avatar/" . md5($authorized_email) . "?default=404";
+			//$authorized_avatar = $authorized_data['user_avatar'];
 			$authorized_signupdate = $authorized_data['user_signup'];
 			$authorized_lastactive = $authorized_data['user_lastactive'];	
 			$autorized_updated = date('Y-m-d H:i:s');	

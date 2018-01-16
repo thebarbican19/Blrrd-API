@@ -67,7 +67,7 @@ if ($passed_method == 'POST') {
 		$client_secret = "ntT36Dz6DJBsQM/KpQrJZhfPaHQYfte7XPliyj9h";
 		$client_bucket = "blrrd-images";	
 		$client = S3Client::factory(array('credentials' => array('key' => $client_key, 'secret' => $client_secret), 'version' => 'latest', 'region'  => 'eu-central-1'));
-		
+
 		if (file_put_contents($file_tempdir, $file_data)) {	
 			$image_data = fopen($file_tempdir);
 			$image_exif = exif_read_data($image_data, 0, true);
@@ -107,7 +107,7 @@ if ($passed_method == 'POST') {
 						
 					}
 					else {
-						$json_status = 'image could not be stored in database - ' . mysqli_error($image_store);
+						$json_status = 'image could not be stored in database - ' . mysqli_error($database_connect);
 						$json_output[] = array('status' => $json_status, 'error_code' => 400);
 						echo json_encode($json_output);
 						exit;
@@ -135,7 +135,7 @@ if ($passed_method == 'POST') {
 		}
 		else {
 			$json_status = 'image could not be uploaded';
-			$json_output[] = array('status' => $json_status, 'error_code' => 400);
+			$json_output[] = array('status' => $json_status, 'error_code' => 400, 'image' => $file_tempdir, 'fileput' => $upload);
 			echo json_encode($json_output);
 			exit;
 			
@@ -154,7 +154,7 @@ else if ($passed_method == 'DELETE') {
 	}
 	else {
 		if ($authorized_type == "admin") {
-			$image_injection = "SELECT `upload_key` FROM `uploads` WHERE `upload_key` LIKE '$passed_id' LIKE LIMIT 0, 1";
+			$image_injection = "SELECT `upload_key` FROM `uploads` WHERE `upload_key` LIKE '$passed_id' LIMIT 0, 1";
 					
 		}
 		else {
@@ -188,7 +188,7 @@ else if ($passed_method == 'DELETE') {
 		}
 		else {
 			$json_status = 'image does not exist';
-			$json_output[] = array('status' => $json_status, 'error_code' => 409);
+			$json_output[] = array('status' => $json_status, 'error_code' => 409, 'sql' => $image_injection);
 			echo json_encode($json_output);
 			exit;
 			

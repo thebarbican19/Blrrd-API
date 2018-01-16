@@ -12,19 +12,23 @@ $passed_data = json_decode(file_get_contents('php://input'), true);
 if ($passed_method == 'GET') {
 	$passed_postid = $_GET['postid'];
 	$passed_limit = $_GET['limit'];
-	$passed_pagenation = $_GET['pangnation'];
+	$passed_pagenation = $_GET['pagnation'];
 	
 	if (empty($passed_limit)) $passed_limit = 20;
 	if (empty($passed_pagenation)) $passed_pagenation = 0;
 
-	if (empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_user` LIKE '$authorized_user'";
-	else $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key WHERE `time_post` LIKE '$passed_postid' AND `time_user` LIKE '$authorized_user'";
+	if (empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on users.user_key LIKE uploads.upload_owner WHERE `upload_owner` LIKE '$authorized_user'";
+	else if (!empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on users.user_key LIKE uploads.upload_owner WHERE `time_post` LIKE '$passed_postid' AND `upload_owner` LIKE '$authorized_user'";
 	
 	$time_injection .= " ORDER BY `time_added` DESC LIMIT $passed_pagenation, $passed_limit";
 	$time_query = mysqli_query($database_connect, $time_injection);
 	$time_items_count = mysqli_num_rows($time_query);
 	while($row = mysqli_fetch_array($time_query)) {	
-		$time_output[] = array("postid" => $row['time_post'], "userid" => $row['time_user'], "timestamp" => $row['time_added'], "seconds" => (int)$row['time_seconds'], "imageurl" => $row['upload_file']);
+		$time_user = array("userid" => (string)$row['user_key'], 
+								 "avatar" => (string)$row['user_avatar'],
+								 "username" => (string)$row['user_name'],
+								 "lastactive" => $row['user_lastactive']);	
+		$time_output[] = array("postid" => $row['time_post'], "user" => $time_user, "timestamp" => $row['time_added'], "seconds" => (int)$row['time_seconds'], "imageurl" => $row['upload_file']);
 		
 	}
 	

@@ -40,8 +40,10 @@ if ($passed_method == 'GET') {
 	if ($passed_format == "image" || empty($passed_format)) {
 		$object_url = $client->getObjectUrl($client_bucket, $passed_image);
 		$object_content = file_get_contents($object_url);
-
-		header('Content-Type: image/jpeg');
+		$object_open = finfo_open();
+		$object_type = "Content-Type: " . finfo_buffer($file_open, $object_content, FILEINFO_MIME_TYPE);
+		
+		header($object_type);
 		
 		echo $object_content;
 		

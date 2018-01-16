@@ -143,6 +143,26 @@ elseif ($passed_method == 'PUT') {
 	}
 	
 }
+else if ($passed_method == 'DELETE') {
+	$token_destroy = mysqli_query($database_connect, "DELETE FROM `access` WHERE `access_token` LIKE '$session_bearer';");
+	if ($token_destroy) {
+		header('HTTP/1.1 200 SUCSESSFUL');
+								
+		$json_status = 'user logged out';
+		$json_output[] = array('status' => $json_status, 'error_code' => 200);
+		echo json_encode($json_output);
+		exit;
+		
+	}
+	else {
+		$json_status = 'user not logged out - ' . mysqli_error($database_connect);
+		$json_output[] = array('status' => $json_status, 'error_code' => 400);
+		echo json_encode($json_output);
+		exit;
+		
+	}
+	
+}
 else {
 	$json_status = $passed_method . ' menthods are not supported in the api';
 	$json_output[] = array('status' => $json_status, 'error_code' => 405);

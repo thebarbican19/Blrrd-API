@@ -1,18 +1,21 @@
 <?php
 
 include '../lib/auth.php';
+include '../lib/push.php';
 
 header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_limit = (int)$_GET['limit'];
-$passed_pagenation = (int)$_GET['pangnation'];
-$passed_userid = $passed_data['userid'];
+$passed_pagenation = (int)$_GET['pagnation'];
+$passed_userid = $_GET['userid'];
 
 if (empty($passed_limit)) $passed_limit = 40;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 	
+$passed_pagenation = $passed_pagenation * $passed_limit;
+
 if ($passed_method == 'GET') {
 	$friendship_query = mysqli_query($database_connect, "SELECT * FROM `follow` LEFT JOIN users on follow.follow_user LIKE users.user_key WHERE `follow_owner` LIKE '$authorized_user' ORDER BY `follow_timestamp` DESC LIMIT $passed_pagenation, $passed_limit");
 	$friendship_count = mysqli_num_rows($friendship_query);
@@ -63,7 +66,7 @@ else if ($passed_method == 'POST') {
 					$push_title = "🎉 New Follower!";
 					$push_body = $authorized_username . " just followed you";
 				
-					$push_output = sent_push_to_user($passed_userid, $push_payload, $push_title, $push_body);
+					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
 					
 					$json_status = 'user followed!';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);
@@ -109,7 +112,7 @@ else if ($passed_method == 'DELETE') {
 	
 	if ($follow_exists == 0) {
 		$json_status = 'you are not following this user';
-		$json_output[] = array('status' => $json_status, 'error_code' => 403);
+		$json_output[] = array('status' => $json_status, 'error_code' => 403, 'user' => $passed_userid);
 		echo json_encode($json_output);
 		exit;
 		

@@ -7,12 +7,13 @@ header('Content-Type: application/json');
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_limit = (int)$_GET['limit'];
-$passed_pagenation = (int)$_GET['pangnation'];
+$passed_pagenation = (int)$_GET['pagnation'];
 $passed_type = $_GET['type'];
 
 if (empty($passed_limit)) $passed_limit = 40;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
 
+$passed_pagenation = $passed_pagenation * $passed_limit;
 $passed_allowd_types = array("following", "trending");
 
 if ($passed_method == 'GET') {
@@ -41,10 +42,9 @@ if ($passed_method == 'GET') {
 					
 				}
 				
-				$follower_injection = substr($follower_injection, 0, strlen($follower_injection) - 4);
-				$follower_injection .= ") ";
+				$follower_injection .= " `upload_owner` LIKE '" . $authorized_user . "') ";
 				
-				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
+				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0'  $follower_injection  GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
 				
 			}
 			else {
@@ -58,7 +58,7 @@ if ($passed_method == 'GET') {
 						
 		}
 		else if ($passed_type == "trending") {
-			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
+			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
 			
 		}
 		
@@ -66,8 +66,9 @@ if ($passed_method == 'GET') {
 		$timeline_query = mysqli_query($database_connect, $timeline_injection);
 		$timeline_items = mysqli_num_rows($timeline_query);
 		while($row = mysqli_fetch_array($timeline_query)) {
+			$timeline_gravatar = "https://www.gravatar.com/avatar/" . md5($row['user_email']) . "?default=404";
 			$timeline_user = array("userid" => (string)$row['user_key'], 
-								 "avatar" => (string)$row['user_avatar'],
+								 "avatar" => (string)$timeline_gravatar,
 								 "username" => (string)$row['user_name'],
 								 "lastactive" => $row['user_lastactive']);	
 			$timeline_timestamp = $row['upload_timestamp'] . " " . $row['upload_timezone'];
