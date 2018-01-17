@@ -25,15 +25,17 @@ function user_posts($user) {
 function user_total_time($user) {
 	global $database_connect;
 		
-	$time_query = mysqli_query($database_connect ,"SELECT `upload_key`, `upload_owner`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post WHERE `upload_owner` LIKE '$user' GROUP BY upload_key");
+	
+	$time_injection = "SELECT `upload_key`, `upload_owner`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post WHERE `upload_owner` LIKE '$user' GROUP BY upload_key";
+	$time_query = mysqli_query($database_connect ,$time_injection);
 	$time_count = mysqli_num_rows($time_query);
 	$time_total = 0;
 	while($row = mysqli_fetch_array($time_query)) {
-		$upload_time =+ $row['upload_time'];
+		$time_total += (int)$row['upload_time'];
 		
 	}
 				
-	return $upload_time;
+	return $time_total;
 	
 }
 

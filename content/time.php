@@ -61,12 +61,14 @@ else if ($passed_method == 'POST') {
 		
 	}
 	else {
-		$post_query = mysqli_query($database_connect, "SELECT * FROM `uploads` WHERE `upload_key` LIKE '$passed_postid' LIMIT 0, 1");
+		$post_query = mysqli_query($database_connect, "SELECT `upload_key`, `upload_file`, `upload_owner` FROM `uploads` WHERE `upload_key` LIKE '$passed_postid' LIMIT 0, 1");
 		$post_exists = mysqli_num_rows($post_query);
 		if ($post_exists == 1)	{
 			$post_data = mysqli_fetch_assoc($post_query);
 			$post_removed = (int)$post_data['upload_removed'];
 			$post_user = $post_data['upload_owner'];
+			$post_file = $post_data['upload_file'];	
+			$post_image = "http://52.59.224.79/api/content/image.php?id=" . $post_file . "&tok=" . $session_bearer;
 			if ($post_removed == 1) {
 				$json_status = 'post does not exist';
 				$json_output[] = array('status' => $json_status, 'error_code' => 409);
@@ -105,6 +107,7 @@ else if ($passed_method == 'POST') {
 						
 					}
 					
+					$push_payload = array("mutableContent" => true, "attachment-url" => $post_image);
 					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
 				
 					$json_status = $passed_time . ' seconds added to post';

@@ -41,9 +41,11 @@ if ($passed_method == 'GET') {
 		$object_url = $client->getObjectUrl($client_bucket, $passed_image);
 		$object_content = file_get_contents($object_url);
 		$object_open = finfo_open();
-		$object_type = "Content-Type: " . finfo_buffer($file_open, $object_content, FILEINFO_MIME_TYPE);
+		$object_type = finfo_buffer($object_open, $object_content, FILEINFO_MIME_TYPE);
+		if (empty($object_type)) $object_contenttype = "Content-Type: " . $object_type;
+		else $object_contenttype = "Content-Type: image/jpeg";
 		
-		header($object_type);
+		header($object_contenttype);
 		
 		echo $object_content;
 		
@@ -52,7 +54,7 @@ if ($passed_method == 'GET') {
 		if ($authorized_type == "admin") {
 			$object_output = $client->getObject(array('Bucket' => $client_bucket, 'Key' => $passed_image));
 			//print_r($object_output['Metadata']);
-			//print_r($object_output);
+			print_r($object_output);
 					
 		}
 		else {
