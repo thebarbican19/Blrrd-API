@@ -47,7 +47,8 @@ if ($passed_method == 'GET') {
 		
 		header($object_contenttype);
 		
-		echo $object_content;
+		if (empty($object_content)) $remove_photo = mysqli_query($database_connect, "UPDATE `uploads` SET `upload_removed` = '1' WHERE `upload_file` LIKE '$passed_image';");
+		else echo $object_content;
 		
 	}
 	else {

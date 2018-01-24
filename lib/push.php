@@ -21,7 +21,7 @@ function sent_push_to_user($user, $payload, $title, $body) {
 	if (!is_null($push_user_name)) {
 		$push_message = array('body' => $body, 'title' => $title);
 		$push_url = 'https://api.pushbots.com/push/all';
-		$push_content = array('platform' => '0', 'alias' => $push_user_name, 'payload' => $payload, 'sound' => 'grado_alert.wav' , 'msg' => $push_message, 'mutable-content' => '1');
+		$push_content = array('platform' => '0', 'alias' => $push_user_name, 'payload' => $payload, 'sound' => 'blrrd_notification.wav' , 'msg' => $push_message);
 		$push_return = 	pushbots($push_url, $push_content, "POST");
 		
 	}

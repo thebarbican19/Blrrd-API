@@ -32,6 +32,20 @@ if ($passed_method == 'GET') {
 		
 	}
 	else {
+		
+		$report_query = mysqli_query($database_connect, "SELECT `report_item` FROM `report` WHERE `report_user` LIKE '$authorized_user'");
+		$report_count = mysqli_num_rows($report_query);
+		if ($report_count > 0) {
+			while($row = mysqli_fetch_array($report_query)) {	
+				$report_injection .= "`upload_key` NOT LIKE '" . $row['report_item'] . "' OR ";
+				
+			}
+			
+			if (strpos($report_injection, 'OR') !== false) $report_injection = substr($report_injection, 0, strlen($report_injection) - 4);
+			$report_injection .= ")";
+			
+		}
+		
 		if ($passed_type == "following") {
 			$follower_query = mysqli_query($database_connect, "SELECT `follow_user`, `follow_owner` FROM `follow` WHERE `follow_owner` LIKE '$authorized_user'");
 			$follower_count = mysqli_num_rows($follower_query);
@@ -44,7 +58,7 @@ if ($passed_method == 'GET') {
 				
 				$follower_injection .= " `upload_owner` LIKE '" . $authorized_user . "') ";
 				
-				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0'  $follower_injection  GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
+				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
 				
 			}
 			else {
@@ -58,7 +72,7 @@ if ($passed_method == 'GET') {
 						
 		}
 		else if ($passed_type == "trending") {
-			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection GROUP BY uploads.upload_key ORDER BY `upload_time` DESC, `upload_timestamp` DESC";
+			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key HAVING `upload_time` >= 60 ORDER BY `upload_timestamp` DESC, `upload_time` DESC";
 			
 		}
 		
@@ -84,7 +98,6 @@ if ($passed_method == 'GET') {
 		}
 		
 		if (count($timeline_output) == 0) $timeline_output = array();		
-		
 		
 		header('HTTP/1.1 200 SUCSESSFUL');
 		

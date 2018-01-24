@@ -27,7 +27,7 @@ if ($passed_method == 'POST') {
 	
 	$files_allowed = array("jpeg", "jpg", "png", "gif");
 
-	if (empty($passed_caption) || strlen($passed_caption) < 4) {
+	if (empty($passed_caption) || strlen($passed_caption) < 1) {
 		$json_status = 'caption too short';
 		$json_output[] = array('status' => $json_status, 'error_code' => 422);
 		echo json_encode($json_output);

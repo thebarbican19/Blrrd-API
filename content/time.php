@@ -17,8 +17,8 @@ if ($passed_method == 'GET') {
 	if (empty($passed_limit)) $passed_limit = 20;
 	if (empty($passed_pagenation)) $passed_pagenation = 0;
 
-	if (empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on users.user_key LIKE uploads.upload_owner WHERE `upload_owner` LIKE '$authorized_user'";
-	else if (!empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on users.user_key LIKE uploads.upload_owner WHERE `time_post` LIKE '$passed_postid' AND `upload_owner` LIKE '$authorized_user'";
+	if (empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on time.time_user LIKE users.user_key WHERE `upload_owner` LIKE '$authorized_user'";
+	else if (!empty($passed_postid)) $time_injection = "SELECT `time_post`, `time_user`, `time_added`, `time_seconds`, `upload_file`, `user_key`, `user_name`, `user_lastactive`, `user_avatar` FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on time.time_user LIKE users.user_key WHERE `time_post` LIKE '$passed_postid' AND `upload_owner` LIKE '$authorized_user'";
 	
 	$time_injection .= " ORDER BY `time_added` DESC LIMIT $passed_pagenation, $passed_limit";
 	$time_query = mysqli_query($database_connect, $time_injection);
@@ -96,6 +96,14 @@ else if ($passed_method == 'POST') {
 						$push_payload = array();
 						$push_title = "🔥 Hot Stuff!";
 						$push_body =  "Your post was just promoted to the hot feed!";
+						
+						
+					}
+					else if ($post_total_after > 3600 && $time_total_before < 3600) {
+						$push_user = $post_data['upload_owner'];
+						$push_payload = array();
+						$push_title = "😲 Woahhh!";
+						$push_body =  "Your post has been viewed for more than 1 hour!";
 						
 					}
 					else {

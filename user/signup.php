@@ -8,13 +8,13 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_email = $passed_data['email'];
-$passed_password = $passed_data['password'];
+$passed_email = mysqli_real_escape_string($database_connect, $passed_data['email']);
+$passed_password = mysqli_real_escape_string($database_connect, $passed_data['password']);
 $passed_encryptpassword = password_hash($passed_password ,PASSWORD_BCRYPT);
-$passed_username = $passed_data['username'];
+$passed_username = mysqli_real_escape_string($database_connect, $passed_data['username']);
 $passed_type = $passed_data['type'];
-$passed_country = $passed_data['country'];
-$passed_language = $passed_data['language'];
+$passed_country = mysqli_real_escape_string($database_connect, $passed_data['country']);
+$passed_language = mysqli_real_escape_string($database_connect, $passed_data['language']);
 
 if ($authorized_type == "admin") $passed_type = $passed_data['type'];
 else $passed_type = "user";
