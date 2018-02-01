@@ -74,7 +74,7 @@ if ($passed_method == 'POST') {
 			else {
 				$user_key = "user_" . generate_key();
 				$user_signup = date('Y-m-d H:i:s');			
-				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_public`, `user_language`, `user_country`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '$passed_encryptpassword', '', '', '$passed_email', '1', '$passed_language', '$passed_country');");
+				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_public`, `user_promoted`, `user_language`, `user_country`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '$passed_encryptpassword', '', '', '$passed_email', '1', '0', '$passed_language', '$passed_country');");
 				
 				if ($user_create) {
 					$bearer_token = "at_" . generate_key();	
@@ -85,7 +85,7 @@ if ($passed_method == 'POST') {
 					$bearer_create = mysqli_query($database_connect, $bearer_injection);
 					if ($bearer_create) {
 						$user_stats = user_stats($user_key);
-						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats, "public" => true);
+						$user_output = array("key" => $user_key, "username" => $passed_username, "email" => $passed_email, "type" => $passed_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => date("Y-m-d H:i:s"), "auth" => $bearer_output, "stats" => $user_stats, "public" => true, "promoted" => false);
 							
 						$friendship_timestamp = date('Y-m-d H:i:s');
 						$friendship_blrrdid = "user_sHv7E2MSUEuUt5Jk2R48rVedOSPDpvx5a0Wa";

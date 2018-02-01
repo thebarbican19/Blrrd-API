@@ -11,12 +11,12 @@ $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_type = $passed_data['type'];
 $passed_value = $passed_data['value'];
 
-if ($authuser_type == "admin" && !empty($passed_data['user'])) $user_key = $passed_data['user'];
+if ($authorized_type == "admin" && !empty($passed_data['user'])) $user_key = $passed_data['user'];
 else $user_key = $authuser_key;
 
 if ($passed_method == 'GET') {
 	$user_stats = user_stats($user_key);			
-	$user_output = array("key" => $user_key, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats, "public" => $autorized_userpublic);
+	$user_output = array("key" => $authorized_user, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats, "public" => $autorized_userpublic, "promoted" => $autorized_userpromoted);
 											
 	$json_status = 'user data returned';
 	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);
@@ -25,7 +25,7 @@ if ($passed_method == 'GET') {
 						
 }
 elseif ($passed_method == 'PUT') {
-	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device');
+	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote');
 	$allowed_statuses = array('active', 'inactive');
 	if (empty($passed_type)) {
 		$json_status = 'type parameter missing';
@@ -86,6 +86,27 @@ elseif ($passed_method == 'PUT') {
 			}
 						
 		}
+		elseif ($passed_type == "promote") {
+			if ($authorized_type != "admin") {
+				$json_status = 'user does not have the privileges to perform this action';
+				$json_output[] = array('status' => $json_status, 'error_code' => 401);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$push_user = $post_data['upload_owner'];
+				$push_payload = array();
+				$push_title = "👑 You just got verifyed!";
+				$push_body = "Your account has just been veriyed by the Blrrd team. Congratulations!";
+				$push_payload = array();
+				$push_output = sent_push_to_user($user_key, $push_payload, $push_title, $push_body);
+					
+				$update_injection = "`user_promoted` = '1'";	
+								
+			}
+			
+		}
 		elseif ($passed_type == "device") {
 			if (strlen($passed_value) != 64) {
 				$json_status = 'device token is invalid';
@@ -112,19 +133,8 @@ elseif ($passed_method == 'PUT') {
 			else $update_injection = "`user_avatar` = '" . $passed_value . "'";	
 						
 		}
-		elseif ($passed_type == "language") {
-			if (strlen($passed_value) != 2) {
-				$json_status = 'langauge code invalid';
-				$json_output[] = array('status' => $json_status, 'error_code' => 422);
-				echo json_encode($json_output);
-				exit;
-				
-			}
-			else $update_injection = "`user_language` = '" . $passed_value . "'";	
-						
-		}
 		
-		$update_post = mysqli_query($database_connect, "UPDATE `users` SET $update_injection WHERE `user_key` LIKE '$authorized_user';");
+		$update_post = mysqli_query($database_connect, "UPDATE `users` SET $update_injection WHERE `user_key` LIKE '$user_key';");
 		if ($update_post) {
 			$json_status = 'user ' . $passed_type . ' was sucsessfully updated';
 			$json_output[] = array('status' => $json_status, 'error_code' => 200);

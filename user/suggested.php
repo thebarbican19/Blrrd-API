@@ -61,7 +61,7 @@ if ($passed_method == 'GET') {
 		
 	}
 	
-	$user_injection = "SELECT `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_email` FROM `users` WHERE `user_status` LIKE 'active' AND `user_key` NOT LIKE '$authorized_user' $user_injection LIMIT $passed_pagenation, $passed_limit";
+	$user_injection = "SELECT `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_email`, `user_public`, `user_promoted` FROM `users` WHERE `user_status` LIKE 'active' AND `user_key` NOT LIKE '$authorized_user' $user_injection LIMIT $passed_pagenation, $passed_limit";
 	$user_query  =  mysqli_query($database_connect, $user_injection);
 	$user_count = mysqli_num_rows($user_query);
 	while($row = mysqli_fetch_array($user_query)) {	
@@ -69,8 +69,10 @@ if ($passed_method == 'GET') {
 						   "avatar" => $row['user_avatar'], 
 						   "username" => $row['user_name'], 
 						   "following" => user_following($row['user_key']),
-						   "lastactive" => $row['user_lastactive']);
-			
+						   "lastactive" => $row['user_lastactive'],
+						   "promoted" => (bool)$row['user_promoted'],
+						   "public" => (bool)$row['user_public']);
+									   
 		if (count($passed_emails_array) > 0 && !empty($passed_emails)) {
 			$user_append = array("email" => $row['user_email']);
 			$user_output[] = array_merge($user_data, $user_append);

@@ -49,7 +49,8 @@ if ($passed_method == 'POST') {
 				$user_language = $user_data['user_language'];
 				$user_lastactive = $user_data['user_lastactive'];
 				$user_signup = $user_data['user_signup'];
-				$user_public = (bool)$user_data['user_public'];			
+				$user_public = (bool)$user_data['user_public'];	
+				$user_promoted = (bool)$user_data['user_promoted'];	
 				$user_stats = user_stats($user_key);
 										
 				$bearer_token = "at_" . generate_key();	
@@ -61,7 +62,7 @@ if ($passed_method == 'POST') {
 				if ($bearer_create)	 {
 					header('HTTP/1.1 200 SUCSESSFUL');
 											
-					$user_output = array("key" => $user_key, "username" => $user_name, "email" => $user_email, "type" => $user_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => $user_signup, "auth" => $bearer_output, "stats" => $user_stats, "public" => $user_public);
+					$user_output = array("key" => $user_key, "username" => $user_name, "email" => $user_email, "type" => $user_type, "lastactive" => date("Y-m-d H:i:s"), "signup" => $user_signup, "auth" => $bearer_output, "stats" => $user_stats, "public" => $user_public, "promoted" => $user_promoted);
 						
 					$json_status = 'user logged in';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);

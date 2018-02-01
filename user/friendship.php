@@ -24,10 +24,14 @@ if ($passed_method == 'GET') {
 		$friendship_username = $row['user_name'];
 		$friendship_lastactive = $row['user_lastactive'];
 		$friendship_userid = $row['user_key'];
+		$friendship_userpublic = (bool)$row['user_public'];	
+		$friendship_userpromoted = (bool)$row['user_promoted'];	
 		$friendship_user = array("userid" => $friendship_userid, 
 								 "avatar" => $friendship_avatar, 
 								 "username" => $friendship_username, 
-								 "lastactive" => $friendship_lastactive);	
+								 "lastactive" => $friendship_lastactive,
+								 "public" => $friendship_userpublic, 
+								 "promoted" => $friendship_userpromoted);	
 		$friendship_output[] = array("timestamp" => $row['follow_timestamp'], "user" => $friendship_user);
 		
 	}

@@ -18,7 +18,7 @@ if (empty($passed_pagenation)) $passed_pagenation = 0;
 $passed_pagenation = $passed_pagenation * $passed_limit;
 
 if ($passed_method == 'GET' && $authorized_type == "admin") {
-	$report_query = mysqli_query($database_connect, "SELECT `report_id`, `report_reason`, `user_key`, `user_avatar`, `user_name`, `upload_key`, `upload_caption`, `upload_file` FROM `report` LEFT JOIN users on report.report_user LIKE users.user_key LEFT JOIN uploads on report.report_item LIKE uploads.upload_key ORDER BY `report_id` DESC LIMIT $passed_pagenation, $passed_limit");
+	$report_query = mysqli_query($database_connect, "SELECT `report_id`, `report_reason`, `user_key`, `user_avatar`, `user_name`, `upload_key`, `upload_caption`, `upload_file` FROM `report` LEFT JOIN users on report.report_user LIKE users.user_key LEFT JOIN uploads on report.report_item LIKE uploads.upload_key ORDER BY `report_id` DESC LIMIT $passed_pagenation, $passed_limit;");
 	while($row = mysqli_fetch_array($report_query)) {	
 		$report_post = array("postid" => $row['upload_key'], "file" => $row['upload_file'], "caption" => $row['upload_caption']);
 		$report_user = array("userid" => $row['user_key'], "avatar" => $row['user_avatar'], "username" => $row['user_name']);

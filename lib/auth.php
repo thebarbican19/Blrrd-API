@@ -30,6 +30,8 @@ $session_url =  $_SERVER["SERVER_NAME"] . reset(explode('?', $_SERVER["REQUEST_U
 $session_page = str_replace(".php", "", basename($session_url));
 if (!empty($session_headers["HTTP_BLBEARER"])) $session_bearer = $session_headers["HTTP_BLBEARER"];
 else if (!empty($_GET['tok'])) $session_bearer = $_GET['tok'];
+$session_language = $session_headers["HTTP_BLLANGUAGE"];
+$session_appversion = (float)$session_headers["HTTP_BLAPPVERSION"];
 $session_method = $_SERVER['REQUEST_METHOD'];
 $session_auth_exclude = array("login", "signup");
 
@@ -69,8 +71,10 @@ if (!in_array($session_page, $session_auth_exclude)) {
 			$authorized_signupdate = $authorized_data['user_signup'];
 			$authorized_lastactive = $authorized_data['user_lastactive'];	
 			$autorized_updated = date('Y-m-d H:i:s');	
-			$autorized_userpublic = (bool)$user_data['user_public'];			
-			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated' WHERE `user_key` LIKE '$authorized_user';");
+			$autorized_userpublic = (bool)$authorized_data['user_public'];		
+			$autorized_userpromoted = (bool)$authorized_data['user_promoted'];		
+						
+			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated', `user_language` = '$session_language' WHERE `user_key` LIKE '$authorized_user';");
 					
 		}
 		
