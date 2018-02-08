@@ -3,6 +3,7 @@
 include '../lib/auth.php';
 include '../lib/keygen.php';
 include '../lib/stats.php';
+include '../lib/email.php';
 
 header('Content-Type: application/json');
 
@@ -74,7 +75,7 @@ if ($passed_method == 'POST') {
 			else {
 				$user_key = "user_" . generate_key();
 				$user_signup = date('Y-m-d H:i:s');			
-				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_public`, `user_promoted`, `user_language`, `user_country`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '$passed_encryptpassword', '', '', '$passed_email', '1', '0', '$passed_language', '$passed_country');");
+				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_fullname`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_phone`, `user_description`, `user_dob`, `user_website`, `user_public`, `user_promoted`, `user_language`, `user_country`, `user_latitude`, `user_longitude`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '', '$passed_encryptpassword', '', '', '$passed_email', '', '', NULL, '', '1', '0', '$passed_language', '$passed_country', '0', '0');");
 				
 				if ($user_create) {
 					$bearer_token = "at_" . generate_key();	
@@ -90,6 +91,8 @@ if ($passed_method == 'POST') {
 						$friendship_timestamp = date('Y-m-d H:i:s');
 						$friendship_blrrdid = "user_sHv7E2MSUEuUt5Jk2R48rVedOSPDpvx5a0Wa";
 						$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$friendship_blrrdid', '$user_key');");
+						
+						$email_push = email_subscribe_mailinglist("users", $passed_email, $passed_username);
 		
 						header('HTTP/1.1 200 SUCSESSFUL');
 												
@@ -100,7 +103,7 @@ if ($passed_method == 'POST') {
 						
 					}
 					else {
-						$json_status = 'access token not be created - ' . mysqli_error($bearer_create);
+						$json_status = 'access token not be created - ' . mysqli_error($database_connect);
 						$json_output[] = array('status' => $json_status, 'error_code' => 400);
 						echo json_encode($json_output);
 						exit;
@@ -109,7 +112,7 @@ if ($passed_method == 'POST') {
 					
 				}
 				else {
-					$json_status = 'user could not be created - ' . mysqli_error($user_create);
+					$json_status = 'user could not be created - ' . mysqli_error($database_connect);
 					$json_output[] = array('status' => $json_status, 'error_code' => 400);
 					echo json_encode($json_output);
 					exit;

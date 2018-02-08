@@ -32,8 +32,12 @@ if (!empty($session_headers["HTTP_BLBEARER"])) $session_bearer = $session_header
 else if (!empty($_GET['tok'])) $session_bearer = $_GET['tok'];
 $session_language = $session_headers["HTTP_BLLANGUAGE"];
 $session_appversion = (float)$session_headers["HTTP_BLAPPVERSION"];
+$session_backgroundrequest = (bool)$session_headers["HTTP_BLBACKGROUNDRQST"];
+$session_devicename = (string)$session_headers["HTTP_BLDEVICENAME"];
+if (empty($session_headers["HTTP_BLTIMEZONE"])) $session_timezone = (string)$session_headers["HTTP_BLTIMEZONE"];
+else $session_timezone = "+0000";
 $session_method = $_SERVER['REQUEST_METHOD'];
-$session_auth_exclude = array("login", "signup");
+$session_auth_exclude = array("login", "signup", "reset");
 
 if (!in_array($session_page, $session_auth_exclude)) {
 	if (empty($session_bearer)) {	
@@ -64,6 +68,8 @@ if (!in_array($session_page, $session_auth_exclude)) {
 			$authorized_user = $authorized_data['user_key'];
 			$authorized_username = $authorized_data['user_name'];
 			$authorized_email = $authorized_data['user_email'];		
+			$authorized_phone = $authorized_data['user_phone'];		
+			$authorized_displayname = $authorized_data['user_fullname'];				
 			$authorized_token = $authorized_data['access_token'];
 			$authorized_type = $authorized_data['user_type'];
 			$authorized_avatar = "https://www.gravatar.com/avatar/" . md5($authorized_email) . "?default=404";
@@ -73,8 +79,11 @@ if (!in_array($session_page, $session_auth_exclude)) {
 			$autorized_updated = date('Y-m-d H:i:s');	
 			$autorized_userpublic = (bool)$authorized_data['user_public'];		
 			$autorized_userpromoted = (bool)$authorized_data['user_promoted'];		
-						
-			$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated', `user_language` = '$session_language' WHERE `user_key` LIKE '$authorized_user';");
+				
+			if ($session_backgroundrequest == false) {
+				$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_lastactive` = '$autorized_updated', `user_language` = '$session_language' WHERE `user_key` LIKE '$authorized_user';");
+				
+			}
 					
 		}
 		

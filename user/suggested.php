@@ -47,7 +47,7 @@ if ($passed_method == 'GET') {
 	}
 	else {
 		$user_injection = "AND (";
-		foreach ($passed_emails as $email) {
+		foreach ($passed_emails_array as $email) {
 			if (filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
 				$user_injection .= "`user_email` LIKE '$email' OR ";
 				
@@ -69,6 +69,7 @@ if ($passed_method == 'GET') {
 						   "avatar" => $row['user_avatar'], 
 						   "username" => $row['user_name'], 
 						   "following" => user_following($row['user_key']),
+						   "follows" => user_follows($row['user_key']),   
 						   "lastactive" => $row['user_lastactive'],
 						   "promoted" => (bool)$row['user_promoted'],
 						   "public" => (bool)$row['user_public']);

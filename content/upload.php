@@ -94,7 +94,7 @@ if ($passed_method == 'POST') {
 					$image_file = end(explode("/", $image_upload['ObjectURL']));
 					$image_key = "img_" . generate_key();
 					$image_timestamp = date('Y-m-d H:i:s');
-					$image_timezone = date('O');					
+					$image_timezone = $session_timezone;
 					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`, `upload_tags`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '', '0');");
 					$image_output = array("key" => $image_key, "caption" => $passed_caption);
 					if ($image_store) {

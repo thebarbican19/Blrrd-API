@@ -3,20 +3,21 @@
 include '../lib/auth.php';
 include '../lib/stats.php';
 include '../lib/push.php';
+include '../lib/email.php';
 
 header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_type = $passed_data['type'];
-$passed_value = $passed_data['value'];
+$passed_type = mysqli_real_escape_string($database_connect, $passed_data['type']);
+$passed_value = mysqli_real_escape_string($database_connect, $passed_data['value']);
 
 if ($authorized_type == "admin" && !empty($passed_data['user'])) $user_key = $passed_data['user'];
-else $user_key = $authuser_key;
+else $user_key = $authorized_user;
 
 if ($passed_method == 'GET') {
 	$user_stats = user_stats($user_key);			
-	$user_output = array("key" => $authorized_user, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats, "public" => $autorized_userpublic, "promoted" => $autorized_userpromoted);
+	$user_output = array("key" => $authorized_user, "username" => $authorized_username, "email" => $authorized_email, "type" => $authorized_type, "lastactive" => $authorized_lastactive, "signup" => $authorized_signupdate, "stats" => $user_stats, "public" => $autorized_userpublic, "promoted" => $autorized_userpromoted, "phonenumber" => $authorized_phone, "displayname" => $authorized_displayname);
 											
 	$json_status = 'user data returned';
 	$json_output[] = array('status' => $json_status, 'error_code' => 200, 'user' => $user_output);
@@ -25,8 +26,11 @@ if ($passed_method == 'GET') {
 						
 }
 elseif ($passed_method == 'PUT') {
-	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote');
+	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote', 'phone', 'dob', 'fullname');
 	$allowed_statuses = array('active', 'inactive');
+	if (!empty($session_devicename)) $email_device = "(" . $session_devicename . ") ";
+	else $email_device = "";
+	
 	if (empty($passed_type)) {
 		$json_status = 'type parameter missing';
 		$json_output[] = array('status' => $json_status, 'error_code' => 422);
@@ -67,9 +71,18 @@ elseif ($passed_method == 'PUT') {
 				echo json_encode($json_output);
 				exit;
 				
+			} 
+			else {
+				$email_subject = "Email Updated";
+				$email_recipient = $authorized_email;
+				$email_body .= "Your email has been updated to <strong>" . $passed_value . "</strong>";
+				$email_body .= "<p>This request was made via the <strong>Blrrd iOS app " . $email_device . "</strong> on <strong>" . date('d M Y') . " at " . date('H:i') . "</strong>, if you did not make this request or if this email is unexpected please reply to this email.";	
+				
+				$update_email = email_user($email_subject, $email_body, $email_recipient, NULL);
+				$update_injection = "`user_email` = '" . $passed_value . "'";
+								
 			}
-			else $update_injection = "`user_email` = '" . $passed_value . "'";
-						
+			
 		}
 		elseif ($passed_type == "password") {
 			if (strlen($passed_value) < 5) {
@@ -122,6 +135,64 @@ elseif ($passed_method == 'PUT') {
 			}	
 							
 		}
+		elseif ($passed_type == "phone") {
+			if (strlen($passed_value) < 5) {
+				$json_status = 'phone number is invalid';
+				$json_output[] = array('status' => $json_status, 'error_code' => 422);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				if (strlen($authorized_phone) > 2) {
+					$email_subject = "New Phone Numer Updated";
+					$email_text = "Your phone number has been updated to ";
+					
+				}
+				else {
+					$email_subject = "New Phone Numer Added";
+					$email_text = "A new phone number has been added to your Blrrd account ";
+										
+				}
+				
+				$email_recipient = $authorized_email;
+				$email_body .= $email_text . "<strong>" . $passed_value . "</strong>";
+				$email_body .= "<p>This request was made via the <strong>Blrrd iOS app " . $email_device . "</strong> on <strong>" . date('d M Y') . " at " . date('H:i') . "</strong>, if you did not make this request or if this email is unexpected please reply to this email.";	
+				
+				$update_email = email_user($email_subject, $email_body, $email_recipient, NULL);
+				$update_injection = "`user_phone` = '" . $passed_value . "'";	
+				
+			}	
+							
+		}
+		elseif ($passed_type == "dob") {
+			if (date('Y-m-d', strtotime($passed_value)) != $passed_value) {
+				$json_status = 'dob number is invalid';
+				$json_output[] = array('status' => $json_status, 'error_code' => 422);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$update_injection = "`user_dob` = '" . $passed_value . "'";	
+				
+			}	
+							
+		}
+		elseif ($passed_type == "fullname") {
+			if (count(explode(" ", $passed_value)) < 2) {
+				$json_status = 'fullname is invalid' . $passed_value;
+				$json_output[] = array('status' => $json_status, 'error_code' => 422);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$update_injection = "`user_fullname` = '" . $passed_value . "'";	
+				
+			}	
+							
+		}
 		elseif ($passed_type == "avatar") {
 			if (strlen($passed_value) < 10) {
 				$json_status = 'avatar invalid';
@@ -136,7 +207,7 @@ elseif ($passed_method == 'PUT') {
 		
 		$update_post = mysqli_query($database_connect, "UPDATE `users` SET $update_injection WHERE `user_key` LIKE '$user_key';");
 		if ($update_post) {
-			$json_status = 'user ' . $passed_type . ' was sucsessfully updated';
+			$json_status = 'user ' . $passed_type . ' was sucsessfully updated to ' . $passed_value;
 			$json_output[] = array('status' => $json_status, 'error_code' => 200);
 			echo json_encode($json_output);
 			exit;

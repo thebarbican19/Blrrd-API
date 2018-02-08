@@ -84,11 +84,11 @@ if ($passed_method == 'GET') {
 			$timeline_user = array("userid" => (string)$row['user_key'], 
 								 "avatar" => (string)$timeline_gravatar,
 								 "username" => (string)$row['user_name'],
-								 "lastactive" => $row['user_lastactive'],
+								 "lastactive" => (string)$row['user_lastactive'],
 								 "public" => (bool)$row['user_public'], 
 								 "promoted" => (bool)$row['user_promoted']);	
 			$timeline_timestamp = $row['upload_timestamp'] . " " . $row['upload_timezone'];
-			$timeline_output[] = array("timestamp" => $timeline_timestamp, 
+			$timeline_output[] = array("timestamp" => (string)$timeline_timestamp, 
 									   "postid" => (string)$row['upload_key'], 
 									   "caption" => (string)$row['upload_caption'], 
 									   "imageurl" => (string)$row['upload_file'], 
