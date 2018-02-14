@@ -75,7 +75,7 @@ if ($passed_method == 'POST') {
 			else {
 				$user_key = "user_" . generate_key();
 				$user_signup = date('Y-m-d H:i:s');			
-				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_fullname`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_phone`, `user_description`, `user_dob`, `user_website`, `user_public`, `user_promoted`, `user_language`, `user_country`, `user_latitude`, `user_longitude`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '', '$passed_encryptpassword', '', '', '$passed_email', '', '', NULL, '', '1', '0', '$passed_language', '$passed_country', '0', '0');");
+				$user_create = mysqli_query($database_connect, "INSERT INTO `users` (`user_id`, `user_key`, `user_signup`, `user_lastactive`, `user_status`, `user_type`, `user_name`, `user_fullname`, `user_password`, `user_avatar`, `user_device`, `user_email`, `user_phone`, `user_description`, `user_dob`, `user_gender`, `user_website`, `user_public`, `user_promoted`, `user_language`, `user_country`, `user_latitude`, `user_longitude`) VALUES (NULL, '$user_key', '$user_signup', '$user_signup', 'active', '$passed_type', '$passed_username', '', '$passed_encryptpassword', '', '', '$passed_email', '', '', NULL, '0', '', '0', '0', '$passed_language', '$passed_country', '0', '0');");
 				
 				if ($user_create) {
 					$bearer_token = "at_" . generate_key();	

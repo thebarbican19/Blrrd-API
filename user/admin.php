@@ -22,8 +22,10 @@ if ($passed_method == 'GET') {
 		$stats_posts_today = posts_posted_today();
 		$stats_active_today = user_active_today();
 		$stats_active_total = user_active_total();
-				
-		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "time_viewed_today" => $stats_time_today);
+		$stats_avarage_age = user_average_age();
+		$stats_gender_user = user_genders(1) . "♂ " . user_genders(2) . "♀";
+		
+		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "time_viewed_today" => $stats_time_today, "average_age" => $stats_avarage_age, "user sex" => $stats_gender_user);
 		
 		$json_status = 'stats returned';
 		$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $stats_output);
@@ -78,6 +80,31 @@ function user_active_total() {
 	
 }
 
+function user_genders($gender) {
+	global $database_connect;
+		
+	$gender_query = mysqli_query($database_connect ,"SELECT `user_key`, `user_gender` FROM `users` WHERE `user_gender` = '$gender'");
+	$gender_count = mysqli_num_rows($gender_query);
+		
+	return (int)$gender_count;
+	
+}
+
+function user_average_age() {
+	global $database_connect;
+		
+	$age_average = 0;
+	$age_query = mysqli_query($database_connect ,"SELECT user_key, user_dob FROM `users` WHERE `user_dob` != 'NULL'");
+	while($row = mysqli_fetch_array($age_query)) {
+		$age_difference = strtotime($row['user_dob']) - date("Y-m-d");
+		$age_array[] = date("Y") - date("Y" ,$age_difference);
+		
+	}
+		
+	return array_sum($age_array) / count($age_array);
+	
+}
+
 function user_signups_total() {
 	global $database_connect;
 	
@@ -99,7 +126,6 @@ function posts_posted_today() {
 	$posts_today_count = mysqli_num_rows($posts_today);
 	
 	return (int)$posts_today_count;
-	//return 
 	
 }
 

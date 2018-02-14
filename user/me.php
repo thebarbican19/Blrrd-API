@@ -26,7 +26,7 @@ if ($passed_method == 'GET') {
 						
 }
 elseif ($passed_method == 'PUT') {
-	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote', 'phone', 'dob', 'fullname');
+	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote', 'phone', 'dob', 'fullname', 'gender');
 	$allowed_statuses = array('active', 'inactive');
 	if (!empty($session_devicename)) $email_device = "(" . $session_devicename . ") ";
 	else $email_device = "";
@@ -111,7 +111,7 @@ elseif ($passed_method == 'PUT') {
 				$push_user = $post_data['upload_owner'];
 				$push_payload = array();
 				$push_title = "👑 You just got verifyed!";
-				$push_body = "Your account has just been veriyed by the Blrrd team. Congratulations!";
+				$push_body = "Your account has just been verifyed by the Blrrd team. Congratulations!";
 				$push_payload = array();
 				$push_output = sent_push_to_user($user_key, $push_payload, $push_title, $push_body);
 					
@@ -179,9 +179,23 @@ elseif ($passed_method == 'PUT') {
 			}	
 							
 		}
+		elseif ($passed_type == "gender") {
+			if ($passed_value != "1" && $passed_value != "2") {
+				$json_status = 'gender number is invalid';
+				$json_output[] = array('status' => $json_status, 'error_code' => 422);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$update_injection = "`user_gender` = '" . (int)$passed_value . "'";	
+				
+			}	
+							
+		}
 		elseif ($passed_type == "fullname") {
-			if (count(explode(" ", $passed_value)) < 2) {
-				$json_status = 'fullname is invalid' . $passed_value;
+			if (strlen($passed_value) < 5) {
+				$json_status = 'fullname is invalid';
 				$json_output[] = array('status' => $json_status, 'error_code' => 422);
 				echo json_encode($json_output);
 				exit;

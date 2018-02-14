@@ -87,7 +87,9 @@ if ($passed_method == 'GET') {
 								 "lastactive" => (string)$row['user_lastactive'],
 								 "public" => (bool)$row['user_public'], 
 								 "promoted" => (bool)$row['user_promoted']);	
-			$timeline_timestamp = $row['upload_timestamp'] . " " . $row['upload_timezone'];
+			if (empty($row['upload_timezone'])) $timeline_timezone = "+0000";
+			else $timeline_timezone = $row['upload_timezone'];
+			$timeline_timestamp = $row['upload_timestamp'] . " " . $timeline_timezone;
 			$timeline_output[] = array("timestamp" => (string)$timeline_timestamp, 
 									   "postid" => (string)$row['upload_key'], 
 									   "caption" => (string)$row['upload_caption'], 

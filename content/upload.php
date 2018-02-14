@@ -1,6 +1,7 @@
 <?php
 
 require '../lib/auth.php';
+require '../lib/push.php';
 require '../lib/keygen.php';
 require '../lib/vendor/autoload.php';
 
@@ -15,6 +16,9 @@ $passed_caption = strip_tags($passed_data['caption']);
 $passed_caption = mysqli_real_escape_string($database_connect, $passed_caption);
 $passed_file = $passed_data['file'];
 $passed_id = $passed_data['postid'];
+$passed_location = explode(",", $passed_data['latlng']);
+$passed_latitude = (float)$passed_location[0];
+$passed_longitude = (float)$passed_location[1];
 	
 if ($passed_method == 'POST') {
 	$file_data = base64_decode($passed_file);
@@ -70,15 +74,24 @@ if ($passed_method == 'POST') {
 
 		if (file_put_contents($file_tempdir, $file_data)) {	
 			$image_data = fopen($file_tempdir);
-			$image_exif = exif_read_data($image_data, 0, true);
+			$image_exif = exif_read_data($file_tempdir, 0, true);
 			$image_orenation = $image_exif['IFD0']['Orientation'];
 			$image_device = $image_exif['IFD0']['Model'];
 			$image_camsoftware = $image_exif['IFD0']['Software'];
 			$image_cammake = $image_exif['IFD0']['Make'];
-			//$image_longitude = gpscoordinates($image_exif["GPSLongitude"], $image_exif['GPSLongitudeRef']);
-			//$image_latitude = gpscoordinates($image_exif["GPSLatitude"], $image_exif['GPSLatitudeRef']);
+			if (count($passed_location) > 1) {
+				$image_longitude = $passed_longitude;
+				$image_latitude = $passed_latitude;
+				
+			}
+			else {
+				$image_location = $image_exif["GPS"];
+				$image_longitude = gpscoordinates($image_location["GPSLongitude"], $image_location['GPSLongitudeRef']);
+				$image_latitude = gpscoordinates($image_location["GPSLatitude"], $image_location['GPSLatitudeRef']);
+				
+			}
 			
-			$image_metadata = array("User" => $authuser_key, "Caption" => $passed_caption, "Latitude" => $session_latlng[0], "Longitude" => $session_latlng[1]);			
+			$image_metadata = array("User" => $authuser_key, "Caption" => $passed_caption, "Latitude" => $image_latitude, "Longitude" => $image_longitude);			
 			$image_upload = $client->putObject(array(
 			    'Bucket'       => $client_bucket,
 			    'Key'          => $file_gen,
@@ -91,13 +104,48 @@ if ($passed_method == 'POST') {
 		
 			if ($image_upload) {
 				if (unlink($file_tempdir)) {
+					preg_match_all("/(#\w+)/", $passed_caption, $image_tags);
+					preg_match_all("/(@\w+)/", $passed_caption, $image_users);
+												
+					if (count(reset($image_tags)) > 0) $image_tags_formatted .= implode(",", str_replace("#", "", reset($image_tags))) . ",";				
+					if (!empty($image_device)) $image_tags_formatted .= $image_device . ",";
+					if (!empty($image_software)) $image_tags_formatted .= $image_software . ",";
+					if (!empty($image_cammake)) $image_tags_formatted .= $image_cammake . ",";	
+					$image_tags_formatted = substr($image_tags_formatted, 0, strlen($image_tags_formatted) - 1);
+					$image_tags_formatted = strtolower(str_replace(" ", "", $image_tags_formatted));
 					$image_file = end(explode("/", $image_upload['ObjectURL']));
 					$image_key = "img_" . generate_key();
 					$image_timestamp = date('Y-m-d H:i:s');
 					$image_timezone = $session_timezone;
-					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`, `upload_tags`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '', '0');");
+					
+					
+					if (count(reset($image_users)) > 0) {
+						$tagged_user = str_replace("@", "", reset($image_users));
+						foreach ($tagged_user as $user) {
+							$tagged_user_query = mysqli_query($database_connect, "SELECT `user_key` FROM `users` WHERE `user_name` LIKE '$user' LIMIT 0, 1");
+							$tagged_user_data = mysqli_fetch_assoc($tagged_user_query);
+							$tagged_user_key[] = $tagged_user_data['user_key'];
+							
+							$push_user = $tagged_user_data['user_key'];
+							$push_payload = array();
+							$push_title = "👋 You were tagged by @" . $authorized_username;
+							$push_body =  "'" . str_replace("@", "", $passed_caption) . "'";
+							$push_payload = array("mutableContent" => true, "attachment-url" => $post_image);
+							$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
+							
+						}
+						
+					}
+					
+					$image_users_tagged = implode(",", $tagged_user_key);
+					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`,`upload_url`, `upload_tags`, `upload_latitude`, `upload_longitude`, `upload_place`, `upload_userstagged`, `upload_device`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '$image_tags_formatted', '$image_latitude', '$image_longitude', '', '$image_users_tagged', '$image_device', '', '0');");
 					$image_output = array("key" => $image_key, "caption" => $passed_caption);
 					if ($image_store) {
+						if ($image_longitude != 0.000 && $image_latitude != 0.000) {
+							$authuser_update = mysqli_query($database_connect, "UPDATE `users` SET `user_latitude` = '$image_latitude', `user_longitude` = '$image_longitude' WHERE `user_key` LIKE '$authorized_user';");
+																	
+						}
+						
 						header('HTTP/1.1 200 SUCSESSFUL');
 								
 						$json_status = 'image uploaded';
@@ -202,6 +250,28 @@ else {
 	$json_output[] = array('status' => $json_status, 'error_code' => 405);
 	echo json_encode($json_output);
 	exit;
+	
+}
+
+function gpscoordinates($coordinates, $reference) {
+    $degrees = count($coordinates) > 0 ? gpstonumber($coordinates[0]):0;
+    $minutes = count($coordinates) > 1 ? gpstonumber($coordinates[1]):0;
+    $seconds = count($coordinates) > 2 ? gpstonumber($coordinates[2]):0;
+
+    $flip = ($reference == 'W' or $reference == 'S') ? -1 : 1;
+
+    return $flip * ($degrees + $minutes / 60 + $seconds / 3600);
+
+}
+
+function gpstonumber($coordPart) {
+    $parts = explode('/', $coordPart);
+
+    if (count($parts) <= 0) return 0;
+
+    if (count($parts) == 1) return $parts[0];
+
+    return floatval($parts[0]) / floatval($parts[1]);
 	
 }
 

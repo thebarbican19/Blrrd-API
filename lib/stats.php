@@ -49,7 +49,6 @@ function user_total_followers($user) {
 	
 }
 
-
 function user_posts_time($post) {
 	global $database_connect;
 		
