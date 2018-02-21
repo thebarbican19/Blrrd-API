@@ -58,7 +58,7 @@ if ($passed_method == 'GET') {
 				
 				$follower_injection .= " `upload_owner` LIKE '" . $authorized_user . "') ";
 				
-				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_public`, `user_promoted`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
+				$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_public`, `user_promoted`, `user_email`, `upload_userstagged`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, `upload_latitude`, `upload_longitude`, `upload_locshare`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key ORDER BY `upload_timestamp` DESC";
 				
 			}
 			else {
@@ -72,7 +72,7 @@ if ($passed_method == 'GET') {
 						
 		}
 		else if ($passed_type == "trending") {
-			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_public`, `user_promoted`, `user_email`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key HAVING `upload_time` >= 60 ORDER BY `upload_timestamp` DESC, `upload_time` DESC";
+			$timeline_injection = "SELECT `user_key`, `user_avatar`, `user_name`, `user_lastactive`, `user_public`, `user_promoted`, `user_email`, `upload_userstagged`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, `upload_latitude`, `upload_longitude`, `upload_locshare`, SUM(time.time_seconds) AS upload_time FROM `time` LEFT JOIN uploads on time.time_post LIKE uploads.upload_key LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' $follower_injection $report_injection GROUP BY uploads.upload_key HAVING `upload_time` >= 60 ORDER BY `upload_timestamp` DESC, `upload_time` DESC";
 			
 		}
 		
@@ -89,16 +89,27 @@ if ($passed_method == 'GET') {
 								 "promoted" => (bool)$row['user_promoted']);	
 			if (empty($row['upload_timezone'])) $timeline_timezone = "+0000";
 			else $timeline_timezone = $row['upload_timezone'];
+			$timeline_mentioned = explode(",", $row['upload_userstagged']);
 			$timeline_timestamp = $row['upload_timestamp'] . " " . $timeline_timezone;
-			$timeline_output[] = array("timestamp" => (string)$timeline_timestamp, 
+			$timeline_data = array("timestamp" => (string)$timeline_timestamp, 
 									   "postid" => (string)$row['upload_key'], 
 									   "caption" => (string)$row['upload_caption'], 
 									   "imageurl" => (string)$row['upload_file'], 
 									   "channel" => (string)$row['upload_channel'], 
 									   "user" => $timeline_user, 
+									   "mentioned" => $timeline_mentioned,  
 									   "seconds" => (int)$row['upload_time']);
+									   
+									   
+			if ((int)$row['upload_locshare'] == 1 && (float)$row['upload_latitude'] != 0 && (float)$row['upload_longitude'] != 0) {
+				$timeline_location = array("latitude" => (float)$row['upload_latitude'] ,"longitude" => (float)$row['upload_longitude']);
+				$timeline_append = array("location" => $timeline_location);
+				$timeline_output[] = array_merge($timeline_data, $timeline_append);
+				
+				
+			}
+			else $timeline_output[] = array_merge($timeline_data);
 			
-		
 		}
 		
 		if (count($timeline_output) == 0) $timeline_output = array();		

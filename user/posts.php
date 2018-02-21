@@ -32,7 +32,7 @@ if ($passed_method == 'GET') {
 	}
 	else $passed_userid = $authorized_user;
 	
-	$timeline_injection = "SELECT `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_public`, `user_promoted`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' AND `upload_owner` LIKE '$passed_userid' GROUP BY upload_key ORDER BY `upload_timestamp` DESC LIMIT $passed_pagenation, $passed_limit";
+	$timeline_injection = "SELECT `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_caption` , `upload_file`, `upload_channel`, `user_key`, `user_name`, `user_avatar`, `user_lastactive`, `user_public`, `user_promoted`, `upload_latitude`, `upload_longitude`, `upload_locshare`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_removed` = '0' AND `upload_owner` LIKE '$passed_userid' GROUP BY upload_key ORDER BY `upload_timestamp` DESC LIMIT $passed_pagenation, $passed_limit";
 	$timeline_query = mysqli_query($database_connect, $timeline_injection);
 	$timeline_items = mysqli_num_rows($timeline_query);
 	while($row = mysqli_fetch_array($timeline_query)) {
@@ -44,16 +44,25 @@ if ($passed_method == 'GET') {
 							   "promoted" => (bool)$row['user_promoted']);	
 		if (empty($row['upload_timezone'])) $timeline_timezone = "+0000";
 		else $timeline_timezone = $row['upload_timezone'];
+		$timeline_mentioned = explode(",", $row['upload_userstagged']);		
 		$timeline_timestamp = $row['upload_timestamp'] . " " . $timeline_timezone;
-		$timeline_output[] = array("timestamp" => $timeline_timestamp, 
+		$timeline_data = array("timestamp" => $timeline_timestamp, 
 								   "postid" => (string)$row['upload_key'], 
 								   "caption" => (string)$row['upload_caption'], 
 								   "imageurl" => (string)$row['upload_file'], 
 								   "channel" => (string)$row['upload_channel'], 
 								   "user" => $timeline_user, 
+								   "mentioned" => $timeline_mentioned,   
 								   "seconds" => (int)$row['upload_time']);
+								   
+		if ((int)$row['upload_locshare'] == 1 && (float)$row['upload_latitude'] != 0 && (float)$row['upload_longitude'] != 0) {
+			$timeline_location = array("latitude" => (float)$row['upload_latitude'] ,"longitude" => (float)$row['upload_longitude']);
+			$timeline_append = array("location" => $timeline_location);
+			$timeline_output[] = array_merge($timeline_data, $timeline_append);
+			
+		}
+		else $timeline_output[] = array_merge($timeline_data);
 		
-	
 	}
 	
 	if (count($timeline_output) == 0) $timeline_output = array();		

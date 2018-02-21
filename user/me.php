@@ -26,7 +26,7 @@ if ($passed_method == 'GET') {
 						
 }
 elseif ($passed_method == 'PUT') {
-	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote', 'phone', 'dob', 'fullname', 'gender');
+	$allowed_types = array('status' ,'email', 'password', 'avatar', 'language', 'device', 'promote', 'phone', 'dob', 'fullname', 'gender', 'instagram', 'website');
 	$allowed_statuses = array('active', 'inactive');
 	if (!empty($session_devicename)) $email_device = "(" . $session_devicename . ") ";
 	else $email_device = "";
@@ -108,13 +108,21 @@ elseif ($passed_method == 'PUT') {
 				
 			}
 			else {
+				$user_query = mysqli_query($database_connect, "SELECT `user_name`, `user_email` FROM `users` WHERE `user_key` LIKE '$user_key'");
+				$user_data = mysqli_fetch_assoc($user_query);
+				$user_email = $user_data['user_email'];
+				$user_name = $user_data['user_name'];
+									
+				/*
 				$push_user = $post_data['upload_owner'];
 				$push_payload = array();
 				$push_title = "👑 You just got verifyed!";
 				$push_body = "Your account has just been verifyed by the Blrrd team. Congratulations!";
 				$push_payload = array();
 				$push_output = sent_push_to_user($user_key, $push_payload, $push_title, $push_body);
-					
+				*/
+				
+				$update_email = email_subscribe_mailinglist("verifyed", $user_email, $user_name);	
 				$update_injection = "`user_promoted` = '1'";	
 								
 			}
@@ -203,6 +211,34 @@ elseif ($passed_method == 'PUT') {
 			}
 			else {
 				$update_injection = "`user_fullname` = '" . $passed_value . "'";	
+				
+			}	
+							
+		}
+		elseif ($passed_type == "instagram") {
+			if (strlen($passed_value) < 5) {
+				$json_status = 'instagram is invalid';
+				$json_output[] = array('status' => $json_status, 'error_code' => 422);
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$update_injection = "`user_instagram` = '" . $passed_value . "'";	
+				
+			}	
+							
+		}
+		elseif ($passed_type == "website") {
+			if (substr($passed_value, 0, 4) != "http") {
+				$json_status = 'website is invalid';
+				$json_output[] = array('status' => $json_status, 'error_code' => 422 ,'website' => substr($passed_value, 0, 4));
+				echo json_encode($json_output);
+				exit;
+				
+			}
+			else {
+				$update_injection = "`user_website` = '" . $passed_value . "'";	
 				
 			}	
 							

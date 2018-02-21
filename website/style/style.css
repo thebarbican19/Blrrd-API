@@ -43,13 +43,22 @@ body {
 }
 
 h1 {
+	color:white;
+	margin-bottom:10px;
+	margin-top:15px;
+	font-size:22px;
+	font-family:nunitofont_extrabold;
+	letter-spacing:1px;
+	text-transform:uppercase;
+	
+}
+
+h2 {
 	color:#69DCCB;
 	margin-bottom:10px;
 	margin-top:15px;
 	font-size:16px;
-	font-family:nunitofont_extrabold;
-	letter-spacing:1px;
-	text-transform:uppercase;
+	font-family:nunitofont_semibold;
 	
 }
 

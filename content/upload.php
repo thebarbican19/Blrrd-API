@@ -14,11 +14,18 @@ $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_caption = strip_tags($passed_data['caption']);
 $passed_caption = mysqli_real_escape_string($database_connect, $passed_caption);
+$passed_location = mysqli_real_escape_string($database_connect, $passed_data['latlng']);
+$passed_location = explode(",", $passed_location);
+$passed_tags = strip_tags($passed_data['tags']);
+$passed_tags = mysqli_real_escape_string($database_connect, $passed_tags);
 $passed_file = $passed_data['file'];
 $passed_id = $passed_data['postid'];
-$passed_location = explode(",", $passed_data['latlng']);
 $passed_latitude = (float)$passed_location[0];
 $passed_longitude = (float)$passed_location[1];
+$passed_location = (bool)$passed_data['locationshare'];
+
+if ($passed_location == true || empty($passed_location)) $passed_location = "1";
+else $passed_location = "0";
 	
 if ($passed_method == 'POST') {
 	$file_data = base64_decode($passed_file);
@@ -107,17 +114,10 @@ if ($passed_method == 'POST') {
 					preg_match_all("/(#\w+)/", $passed_caption, $image_tags);
 					preg_match_all("/(@\w+)/", $passed_caption, $image_users);
 												
-					if (count(reset($image_tags)) > 0) $image_tags_formatted .= implode(",", str_replace("#", "", reset($image_tags))) . ",";				
-					if (!empty($image_device)) $image_tags_formatted .= $image_device . ",";
-					if (!empty($image_software)) $image_tags_formatted .= $image_software . ",";
-					if (!empty($image_cammake)) $image_tags_formatted .= $image_cammake . ",";	
-					$image_tags_formatted = substr($image_tags_formatted, 0, strlen($image_tags_formatted) - 1);
-					$image_tags_formatted = strtolower(str_replace(" ", "", $image_tags_formatted));
 					$image_file = end(explode("/", $image_upload['ObjectURL']));
 					$image_key = "img_" . generate_key();
 					$image_timestamp = date('Y-m-d H:i:s');
 					$image_timezone = $session_timezone;
-					
 					
 					if (count(reset($image_users)) > 0) {
 						$tagged_user = str_replace("@", "", reset($image_users));
@@ -138,7 +138,7 @@ if ($passed_method == 'POST') {
 					}
 					
 					$image_users_tagged = implode(",", $tagged_user_key);
-					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`,`upload_url`, `upload_tags`, `upload_latitude`, `upload_longitude`, `upload_place`, `upload_userstagged`, `upload_device`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '$image_tags_formatted', '$image_latitude', '$image_longitude', '', '$image_users_tagged', '$image_device', '', '0');");
+					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`,`upload_url`, `upload_tags`, `upload_latitude`, `upload_longitude`, `upload_place`, `upload_locshare`, `upload_userstagged`, `upload_device`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '$passed_tags', '$image_latitude', '$image_longitude', '', '$passed_location', '$image_users_tagged', '$image_device', '', '0');");
 					$image_output = array("key" => $image_key, "caption" => $passed_caption);
 					if ($image_store) {
 						if ($image_longitude != 0.000 && $image_latitude != 0.000) {

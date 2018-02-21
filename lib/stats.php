@@ -15,7 +15,7 @@ function user_stats($user) {
 function user_posts($user) {
 	global $database_connect;
 		
-	$posts_query = mysqli_query($database_connect ,"SELECT * FROM `uploads` WHERE `upload_owner` LIKE '$user'");
+	$posts_query = mysqli_query($database_connect ,"SELECT * FROM `uploads` WHERE `upload_owner` LIKE '$user' AND `upload_removed` LIKE '0'");
 	$posts_count = mysqli_num_rows($posts_query);
 	
 	return $posts_count;
@@ -26,7 +26,7 @@ function user_total_time($user) {
 	global $database_connect;
 		
 	
-	$time_injection = "SELECT `upload_key`, `upload_owner`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post WHERE `upload_owner` LIKE '$user' GROUP BY upload_key";
+	$time_injection = "SELECT `upload_key`, `upload_owner`, SUM(time.time_seconds) AS upload_time FROM `uploads` LEFT JOIN time on uploads.upload_key LIKE time.time_post WHERE `upload_owner` LIKE '$user' AND `upload_removed` LIKE '0' GROUP BY upload_key";
 	$time_query = mysqli_query($database_connect ,$time_injection);
 	$time_count = mysqli_num_rows($time_query);
 	$time_total = 0;
