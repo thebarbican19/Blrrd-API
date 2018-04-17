@@ -13,7 +13,7 @@ $passed_id = mysqli_real_escape_string($database_connect, strip_tags($passed_dat
 $passed_limit = (int)$_GET['limit'];
 $passed_pagenation = (int)$_GET['pagnation'];
 $passed_type = mysqli_real_escape_string($database_connect, strip_tags($passed_data['type']));
-$passed_types = array("screenshot" ,"post", "user");
+$passed_types = array("screenshot" ,"post", "user", "comment");
 
 if (empty($passed_limit)) $passed_limit = 50;
 if (empty($passed_pagenation)) $passed_pagenation = 0;

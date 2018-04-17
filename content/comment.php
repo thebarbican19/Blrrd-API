@@ -8,14 +8,14 @@ header('Content-Type: application/json');
 
 $passed_method = $_SERVER['REQUEST_METHOD'];
 $passed_data = json_decode(file_get_contents('php://input'), true);
-$passed_comment = mysqli_real_escape_string($database_connect, $_GET['comment']);
+$passed_comment = mysqli_real_escape_string($database_connect, $passed_data['comment']);
 $passed_seconds = (int)$passed_data['seconds'];
 $passed_key = $_GET['key'];
 $passed_limit = $_GET['limit'];
 $passed_pagenation = $_GET['pangnation'];
 
-if ($passed_method == 'GET') $passed_item = $_GET['item'];
-elseif ($passed_method == 'POST') $passed_item = $passed_data['item'];
+if ($passed_method == 'GET') $passed_item = $_GET['postid'];
+elseif ($passed_method == 'POST') $passed_item = $passed_data['postid'];
 
 if (empty($passed_limit)) $passed_limit = 20;
 if (empty($passed_pagenation)) $passed_pagenation = 0;

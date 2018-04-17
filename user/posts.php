@@ -36,6 +36,19 @@ if ($passed_method == 'GET') {
 	$timeline_query = mysqli_query($database_connect, $timeline_injection);
 	$timeline_items = mysqli_num_rows($timeline_query);
 	while($row = mysqli_fetch_array($timeline_query)) {
+		$comment_item = (string)$row['upload_key'];
+		$comment_output = array();
+		$comment_query = mysqli_query($database_connect, "SELECT `comment_key`, `comment_content`, `user_avatar` FROM `comments` LEFT JOIN users on comments.comment_user LIKE users.user_key WHERE `comment_post` LIKE '$comment_item' ORDER BY `comment_timestamp` ASC LIMIT 0, 3;");
+		while($comment = mysqli_fetch_array($comment_query)) {
+			$comment_key = (string)$comment['comment_key'];
+			$comment_content = (string)$comment['comment_content'];
+			$comment_avatar = (string)$comment['user_avatar'];
+			$comment_output[] = array("key" => $comment_key, "comment" => $comment_content, "avatar" => $comment_avatar);
+			
+		}
+		
+		if (count($comment_output) == 0) $comment_output = array();	
+			
 		$timeline_user = array("userid" => (string)$row['user_key'], 
 							   "avatar" => (string)$row['user_avatar'],
 							   "username" => (string)$row['user_name'],
@@ -53,7 +66,8 @@ if ($passed_method == 'GET') {
 								   "channel" => (string)$row['upload_channel'], 
 								   "user" => $timeline_user, 
 								   "mentioned" => $timeline_mentioned,   
-								   "seconds" => (int)$row['upload_time']);
+								   "seconds" => (int)$row['upload_time'],
+								   "comments" => $comment_output);
 								   
 		if ((int)$row['upload_locshare'] == 1 && (float)$row['upload_latitude'] != 0 && (float)$row['upload_longitude'] != 0) {
 			$timeline_location = array("latitude" => (float)$row['upload_latitude'] ,"longitude" => (float)$row['upload_longitude']);
