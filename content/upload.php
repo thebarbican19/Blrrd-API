@@ -183,7 +183,7 @@ if ($passed_method == 'POST') {
 		}
 		else {
 			$json_status = 'image could not be uploaded';
-			$json_output[] = array('status' => $json_status, 'error_code' => 400, 'image' => $file_tempdir, 'fileput' => $upload);
+			$json_output[] = array('status' => $json_status, 'error_code' => 400);
 			echo json_encode($json_output);
 			exit;
 			

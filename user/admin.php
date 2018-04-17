@@ -23,9 +23,10 @@ if ($passed_method == 'GET') {
 		$stats_active_today = user_active_today();
 		$stats_active_total = user_active_total();
 		$stats_avarage_age = user_average_age();
+		$stats_comments_today = posts_comments_today();
 		$stats_gender_user = user_genders(1) . "♂ " . user_genders(2) . "♀";
 		
-		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "time_viewed_today" => $stats_time_today, "average_age" => $stats_avarage_age, "user sex" => $stats_gender_user);
+		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "comments_today" => $stats_comments_today, "time_viewed_today" => $stats_time_today, "average_age" => $stats_avarage_age, "user sex" => $stats_gender_user);
 		
 		$json_status = 'stats returned';
 		$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $stats_output);
@@ -100,8 +101,9 @@ function user_average_age() {
 		$age_array[] = date("Y") - date("Y" ,$age_difference);
 		
 	}
-		
-	return array_sum($age_array) / count($age_array);
+	
+	$age_output = array_sum($age_array) / count($age_array);
+	return round($age_output, 1);
 	
 }
 
@@ -127,6 +129,17 @@ function posts_posted_today() {
 	
 	return (int)$posts_today_count;
 	
+}
+
+function posts_comments_today() {
+	global $database_connect;
+	
+	$comments_startdate = date('Y-m-d') . " 00:00:01";
+	$comment_enddate = date('Y-m-d H:m:s', strtotime($comments_startdate . '+1 day'));
+	$comment_today = mysqli_query($database_connect ,"SELECT * FROM `comments` WHERE `comment_timestamp` >= '$comments_startdate' AND `comment_timestamp` <= '$comment_enddate'");
+	$comment_count = mysqli_num_rows($comment_today);
+	
+	return (int)$comment_count;
 }
 
 function time_total_today() {

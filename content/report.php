@@ -1,6 +1,7 @@
 <?php
 
 include '../lib/auth.php';
+include '../lib/push.php';
 
 header('Content-Type: application/json');
 
@@ -11,9 +12,16 @@ $passed_item = mysqli_real_escape_string($database_connect, strip_tags($passed_d
 $passed_id = mysqli_real_escape_string($database_connect, strip_tags($passed_data['reportid']));
 $passed_limit = (int)$_GET['limit'];
 $passed_pagenation = (int)$_GET['pagnation'];
+$passed_type = mysqli_real_escape_string($database_connect, strip_tags($passed_data['type']));
+$passed_types = array("screenshot" ,"post", "user");
 
 if (empty($passed_limit)) $passed_limit = 50;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
+if (empty($passed_type)) {
+	if (!empty($passed_item)) $passed_type = "post";
+	if (!empty($passed_user)) $passed_type = "user";
+	
+}
 
 $passed_pagenation = $passed_pagenation * $passed_limit;
 
@@ -42,40 +50,78 @@ else if ($passed_method == 'POST') {
 		exit;
 		
 	}
-	else if (empty($passed_message)) {
+	else if (empty($passed_message) && $passed_type != "screenshot") {
 		$json_status = 'message parameter missing';
 		$json_output[] = array('status' => $json_status, 'error_code' => 422);
 		echo json_encode($json_output);
 		exit;
 		
 	}
+	else if (!in_array($passed_type, $passed_types)) {
+		$json_status = 'type parameter missing or unsupported, should be ' . implode(", ", $passed_types);
+		$json_output[] = array('status' => $json_status, 'error_code' => 422);
+		echo json_encode($json_output);
+		exit;
+		
+	}
 	else {
-		$report_query = mysqli_query($database_connect, "SELECT * FROM `report` WHERE `report_item` LIKE '$passed_item' AND `report_user` LIKE '$authorized_user' LIMIT 0, 1");
-		$report_count = mysqli_num_rows($report_query);
-		if ($report_count == 0) {
-			$report_query = mysqli_query($database_connect, "INSERT INTO `report` (`report_id`, `report_item`, `report_user`, `report_reason`) VALUES (NULL, '$passed_item', '$authorized_user', '$passed_message');");
-			if ($report_query) {
-				$json_status = 'post has been reported sucsessfully';
+		if ($passed_type == "screenshot") {
+			$item_query = mysqli_query($database_connect, "SELECT `upload_file`, `upload_owner` FROM `uploads` LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_key` LIKE '$passed_item' LIMIT 0, 1");
+			$item_data = mysqli_fetch_assoc($item_query);
+			$item_user = $item_data['upload_owner'];
+			$item_image = "http://52.59.224.79/api/content/image.php?id=" . $item_data['upload_file'] . "&tok=" . $authorized_token;
+			
+			if (!empty($item_user) && $authorized_user != $item_user) {
+				$push_payload = array();
+				$push_title = "📸 Your post was screenshotted!";
+				$push_body =  $authorized_username . " screenshotted your post!";
+				$push_payload = array("mutableContent" => true, "attachment-url" => $item_image);
+				$push_output = sent_push_to_user($item_user, $push_payload, $push_title, $push_body);
+				
+				$json_status = 'image snapshot reported';
 				$json_output[] = array('status' => $json_status, 'error_code' => 200);
 				echo json_encode($json_output);
 				exit;
 				
 			}
 			else {
-				$json_status = 'report could not be created - ' . mysqli_error($database_connect);
+				$json_status = 'image snapshot was not reported as user or post is invalid';
 				$json_output[] = array('status' => $json_status, 'error_code' => 400);
 				echo json_encode($json_output);
 				exit;
-						
+				
 			}
 			
 		}
 		else {
-			$json_status = 'post has already been reported';
-			$json_output[] = array('status' => $json_status, 'error_code' => 409);
-			echo json_encode($json_output);
-			exit;
+			$report_query = mysqli_query($database_connect, "SELECT * FROM `report` WHERE `report_item` LIKE '$passed_item' AND `report_user` LIKE '$authorized_user' LIMIT 0, 1");
+			$report_count = mysqli_num_rows($report_query);
+			if ($report_count == 0) {
+				$report_query = mysqli_query($database_connect, "INSERT INTO `report` (`report_id`, `report_item`, `report_user`, `report_reason`) VALUES (NULL, '$passed_item', '$authorized_user', '$passed_message');");
+				if ($report_query) {
+					$json_status = 'post has been reported sucsessfully';
+					$json_output[] = array('status' => $json_status, 'error_code' => 200);
+					echo json_encode($json_output);
+					exit;
+					
+				}
+				else {
+					$json_status = 'report could not be created - ' . mysqli_error($database_connect);
+					$json_output[] = array('status' => $json_status, 'error_code' => 400);
+					echo json_encode($json_output);
+					exit;
+							
+				}
 				
+			}
+			else {
+				$json_status = 'post has already been reported';
+				$json_output[] = array('status' => $json_status, 'error_code' => 409);
+				echo json_encode($json_output);
+				exit;
+					
+			}
+			
 		}
 		
 	}

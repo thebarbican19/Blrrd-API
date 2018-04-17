@@ -72,8 +72,7 @@ if (!in_array($session_page, $session_auth_exclude)) {
 			$authorized_displayname = $authorized_data['user_fullname'];				
 			$authorized_token = $authorized_data['access_token'];
 			$authorized_type = $authorized_data['user_type'];
-			$authorized_avatar = "https://www.gravatar.com/avatar/" . md5($authorized_email) . "?default=404";
-			//$authorized_avatar = $authorized_data['user_avatar'];
+			$authorized_avatar = $authorized_data['user_avatar'];
 			$authorized_signupdate = $authorized_data['user_signup'];
 			$authorized_lastactive = $authorized_data['user_lastactive'];	
 			$autorized_updated = date('Y-m-d H:i:s');	

@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+	#add .php
+	RewriteEngine on
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule ^([^\.]+)$ $1.php [NC,L]
+	
+	#redirect channel
+	RewriteEngine on
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule . /user.php [L=404]
+	
+</IfModule>
