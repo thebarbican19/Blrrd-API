@@ -66,17 +66,15 @@ else if ($passed_method == 'POST') {
 	}
 	else {
 		if ($passed_type == "screenshot") {
-			$item_query = mysqli_query($database_connect, "SELECT `upload_file`, `upload_owner` FROM `uploads` LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_key` LIKE '$passed_item' LIMIT 0, 1");
+			$item_query = mysqli_query($database_connect, "SELECT `upload_key`, `upload_file`, `upload_owner` FROM `uploads` LEFT JOIN users on uploads.upload_owner LIKE users.user_key WHERE `upload_key` LIKE '$passed_item' LIMIT 0, 1");
 			$item_data = mysqli_fetch_assoc($item_query);
 			$item_user = $item_data['upload_owner'];
-			$item_image = "http://52.59.224.79/api/content/image.php?id=" . $item_data['upload_file'] . "&tok=" . $authorized_token;
-			
+			$item_image = $item_data['upload_file'];
+			$item_key = $item_data['upload_key'];		
 			if (!empty($item_user) && $authorized_user != $item_user) {
-				$push_payload = array();
-				$push_title = "📸 Your post was screenshotted!";
-				$push_body =  $authorized_username . " screenshotted your post!";
-				$push_payload = array("mutableContent" => true, "attachment-url" => $item_image);
-				$push_output = sent_push_to_user($item_user, $push_payload, $push_title, $push_body);
+				$notification_title = "*" . $authorized_username . "* screenshotted your post!";
+				$notifcaition_body =  "You can report them if you like?";					
+				$notification_output = add_notifcation($notification_title, $notifcaition_body, $item_image, $item_user, "screenshot", $item_key, true);
 				
 				$json_status = 'image snapshot reported';
 				$json_output[] = array('status' => $json_status, 'error_code' => 200);

@@ -130,19 +130,21 @@ else if ($passed_method == 'POST') {
 							$mention_data = mysql_fetch_assoc($mention_query);
 							$mention_user = $mention_data['user_name'];
 							
-							$push_title = "👋 " . $authuser_username . " mentioned you in a comment";
-							$push_body =  $passed_comment;
-							$push_payload = array("mutableContent" => true, "attachment-url" => $item_file);
-							$push_output = sent_push_to_user($item_owner, $push_payload, $push_title, $push_body);
-						
+							$notification_mention_title = "*" . $authorized_username . "* mentioned you in a comment";
+							$notifcaition_mention_body = $passed_comment;
+							$notification_mention_output = add_notifcation($notification_mention_title, $notifcaition_mention_body, $item_file, $mention_user, "mention", $comment_key, true);
+							
 						}
 						
 					}
 					
-					$push_title = "👫 " . $authuser_username . " commented on your post";
-					$push_body =  $passed_comment;
-					$push_payload = array("mutableContent" => true, "attachment-url" => $item_file);
-					$push_output = sent_push_to_user($item_owner, $push_payload, $push_title, $push_body);
+					if ($item_owner != $authorized_username) {
+						$notification_title = "*" . $authorized_username . "* commented on your post";
+						$notifcaition_body =  $passed_comment;
+						$notification_output = add_notifcation($notification_title, $notifcaition_body, $item_file, $item_owner, "comment", $comment_key, true);
+					
+					}
+					
 						
 					header('HTTP/1.1 200 SUCSESSFUL');				
 					

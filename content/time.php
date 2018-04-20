@@ -68,7 +68,7 @@ else if ($passed_method == 'POST') {
 			$post_removed = (int)$post_data['upload_removed'];
 			$post_user = $post_data['upload_owner'];
 			$post_file = $post_data['upload_file'];	
-			$post_image = "http://52.59.224.79/api/content/image.php?id=" . $post_file . "&tok=" . $session_bearer;
+			$post_key = $post_data['upload_key'];	
 			if ($post_removed == 1) {
 				$json_status = 'post does not exist';
 				$json_output[] = array('status' => $json_status, 'error_code' => 409);
@@ -91,32 +91,19 @@ else if ($passed_method == 'POST') {
 					header('HTTP/1.1 200 SUCSESSFUL');
 					
 					$post_total_after = user_posts_time($passed_postid);
-					if ($post_total_after > 180 && $time_total_before < 180) {
-						$push_user = $post_data['upload_owner'];
-						$push_payload = array();
-						$push_title = "🔥 Hot Stuff!";
-						$push_body =  "Your post was just promoted to the hot feed!";
-						
-						
-					}
-					else if ($post_total_after > 3600 && $time_total_before < 3600) {
-						$push_user = $post_data['upload_owner'];
-						$push_payload = array();
-						$push_title = "😲 Woahhh!";
-						$push_body =  "Your post has been viewed for more than 1 hour!";
-						
+					if ($post_total_after > 3600 && $time_total_before < 3600) {
+						$notification_title = "Your post has been viewed for more than 1 hour!";
+							
 					}
 					else {
-						$push_user = $post_data['upload_owner'];
-						$push_payload = array();
-						$push_title = "⏳ You got time!";
-						if ($passed_time == 1) $push_body = $authorized_username . " viewed your post for " . $passed_time . " second";
-						else $push_body =  $authorized_username . " viewed your post for " . $passed_time . " seconds";
+						if ($passed_time == 1) $notification_title = "*" . $authorized_username . "* viewed your post for *" . $passed_time . "* second";
+						else $notification_title = "*" . $authorized_username . "* viewed your post for *" . $passed_time . "* seconds";
 						
 					}
 					
-					$push_payload = array("mutableContent" => true, "attachment-url" => $post_image);
-					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
+					$notification_user = $post_data['upload_owner'];				
+					$notification_body =  "Open Blrrd to see all the stats";
+					$notification_output = add_notifcation($notification_title, $notifcaition_body, $post_file, $notification_user, "time", $post_key, true);
 				
 					$json_status = $passed_time . ' seconds added to post';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);

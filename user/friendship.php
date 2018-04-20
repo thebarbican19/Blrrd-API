@@ -65,12 +65,10 @@ else if ($passed_method == 'POST') {
 				if ($friendship_create) {
 					header('HTTP/1.1 200 SUCSESSFUL');
 							
-					$push_user = $passed_userid;
-					$push_payload = array();
-					$push_title = "🎉 New Follower!";
-					$push_body = $authorized_username . " just followed you";
-				
-					$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
+					$notification_title = "*" . $authorized_username . "* just followed you";						
+					$notification_user = $passed_userid;				
+					$notification_body =  "Open Blrrd to see their profile, who knows you might find something you like.";
+					$notification_output = add_notifcation($notification_title, $notification_body, "", $notification_user, "follow", $passed_userid, true);
 					
 					$json_status = 'user followed!';
 					$json_output[] = array('status' => $json_status, 'error_code' => 200);

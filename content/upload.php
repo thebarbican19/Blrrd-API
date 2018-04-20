@@ -126,12 +126,10 @@ if ($passed_method == 'POST') {
 							$tagged_user_data = mysqli_fetch_assoc($tagged_user_query);
 							$tagged_user_key[] = $tagged_user_data['user_key'];
 							
-							$push_user = $tagged_user_data['user_key'];
-							$push_payload = array();
-							$push_title = "👋 You were tagged by @" . $authorized_username;
-							$push_body =  "'" . str_replace("@", "", $passed_caption) . "'";
-							$push_payload = array("mutableContent" => true, "attachment-url" => $post_image);
-							$push_output = sent_push_to_user($push_user, $push_payload, $push_title, $push_body);
+							$notification_title = "*" . $authorized_username . "* tagged you in a post";						
+							$notification_user = $tagged_user_data['user_key'];				
+							$notification_body =  "'" . str_replace("@", "", $passed_caption) . "'";
+							$notification_output = add_notifcation($notification_title, $notification_body, $image_file, $notification_user, "mention", $image_key, true);
 							
 						}
 						
