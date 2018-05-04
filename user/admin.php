@@ -19,14 +19,16 @@ if ($passed_method == 'GET') {
 		$stats_signups_total = user_signups_total();
 		$stats_signups_today = user_signups_today();
 		$stats_time_today = time_total_today();
+		$stats_time_total = time_total_overall();
 		$stats_posts_today = posts_posted_today();
+		$stats_countries_total = user_countries_total();
 		$stats_active_today = user_active_today();
 		$stats_active_total = user_active_total();
 		$stats_avarage_age = user_average_age();
 		$stats_comments_today = posts_comments_today();
 		$stats_gender_user = user_genders(1) . "♂ " . user_genders(2) . "♀";
 		
-		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "comments_today" => $stats_comments_today, "time_viewed_today" => $stats_time_today, "average_age" => $stats_avarage_age, "user sex" => $stats_gender_user);
+		$stats_output = array("signups_today" => $stats_signups_today, "signups_total" => $stats_signups_total, "active_today" => $stats_active_today, "active_total" => $stats_active_total, "posts_today" => $stats_posts_today, "comments_today" => $stats_comments_today, "time_viewed_today" => $stats_time_today, "time_viewed_total" => $stats_time_total, "average_age" => $stats_avarage_age, "user_sex" => $stats_gender_user, "user_global_reach" => $stats_countries_total);
 		
 		$json_status = 'stats returned';
 		$json_output[] = array('status' => $json_status, 'error_code' => 200, 'output' => $stats_output);
@@ -119,6 +121,23 @@ function user_signups_total() {
 	
 }
 
+function user_countries_total() {
+	global $database_connect;
+	
+	$counties_query = mysqli_query($database_connect ,"SELECT user_language FROM `users` WHERE user_language NOT LIKE '' GROUP BY user_language");
+	$counties_count = mysqli_num_rows($counties_query);
+	$counties_languages = array();
+	while($row = mysqli_fetch_array($counties_query)) {	
+		$country_language = reset(explode("-", $row['user_language']));
+		if (!in_array($country_language, $counties_languages)) $counties_languages[] = $country_language;
+		
+	}
+	
+			
+	return count($counties_languages) . " languages in " . (int)$counties_count . " lands";
+	
+}
+
 function posts_posted_today() {
 	global $database_connect;
 	
@@ -156,5 +175,20 @@ function time_total_today() {
 	}
 	
 	return (int)$time_today_seconds;
+	
+}
+
+function time_total_overall() {
+	global $database_connect;
+	
+	$time_overall = mysqli_query($database_connect ,"SELECT SUM(time.time_seconds) AS time_total FROM `time` GROUP BY time_user");
+	$time_overall_seconds = 0;
+	while($row = mysqli_fetch_array($time_overall)) {	
+		$time_overall_secionds += $row['time_total'];
+		
+		
+	}
+	
+	return (int)$time_overall_seconds;
 	
 }

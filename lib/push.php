@@ -18,7 +18,7 @@ function add_notifcation($title, $body, $image, $user, $type, $data, $push, $tim
 	global $authorized_user;
 	global $session_timezone;
 	
-	$notification_types = array("mention", "comment", "follow", "time", "screenshot");
+	$notification_types = array("mention", "comment", "follow", "time", "screenshot", "upload");
 	if (!in_array($type, $notification_types)) {
 		return array("type" => "error", "status" => "type uknown", "type" => $type);
 		
@@ -33,7 +33,8 @@ function add_notifcation($title, $body, $image, $user, $type, $data, $push, $tim
 				else if ($type == "comment") $push_title = "💬 " . $push_title;
 				else if ($type == "follow") $push_title = "👋 " . $push_title;
 				else if ($type == "time") $push_title = "⏳ " . $push_title;
-				else if ($type == "screenshot") $push_title = "📸 " . $push_title;				
+				else if ($type == "screenshot") $push_title = "📸 " . $push_title;			
+				else if ($type == "upload") $push_title = "🎆 " . $push_title;						
 				else  $push_title = "🎉 " . $push_title;
 				$push_body = $body;
 				$push_image = "http://52.59.224.79/api/content/image.php?id=" . $image . "&tok=" . $authorized_token;

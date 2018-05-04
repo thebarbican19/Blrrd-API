@@ -80,21 +80,8 @@ if ($passed_method == 'GET') {
 	}
 	
 	foreach ($timeline_content as $row) {
-		$comment_item = (string)$row['upload_key'];
-		$comment_output = array();
-		$comment_query = mysqli_query($database_connect, "SELECT `comment_key`, `comment_content`, `user_key`, `user_name`, `user_avatar` `user_promoted` FROM `comments` LEFT JOIN users on comments.comment_user LIKE users.user_key WHERE `comment_post` LIKE '$comment_item' ORDER BY `comment_timestamp` ASC LIMIT 0, 3;");
-		while($comment = mysqli_fetch_array($comment_query)) {
-			$comment_key = (string)$comment['comment_key'];
-			$comment_content = (string)$comment['comment_content'];
-			$comment_user_avatar = (string)$comment['user_avatar'];
-			$comment_user_key = (string)$comment['user_key'];
-			$comment_user_name = (string)$comment['user_name'];
-			$comment_user_verifyed = (bool)$comment['user_promoted'];	
-			$comment_output[] = array("commentid" => $comment_key, "comment" => $comment_content, "avatar" => $comment_user_avatar, "userid" => $comment_user_key, "handle" => $comment_user_name, "verifyed" => $comment_user_verifyed);
-			
-		}
-		
-		if (count($comment_output) == 0) $comment_output = array();	
+		$comment_count = mysqli_query($database_connect, "SELECT `comment_key` FROM `comments` LEFT JOIN users on comments.comment_user LIKE users.user_key WHERE `comment_post` LIKE '$comment_item' ORDER BY `comment_timestamp` ASC;");
+		$comment_count = mysqli_num_rows($comment_count);
 	
 		if (!empty($row['user_key'] && !in_array($row['upload_key'], $timeline_added))) {
 			$timeline_user = array("userid" => (string)$row['user_key'], 
@@ -117,7 +104,7 @@ if ($passed_method == 'GET') {
 								   "user" => $timeline_user, 
 								   "mentioned" => $timeline_mentioned,  
 								   "seconds" => (int)$row['upload_time'],
-								   "comments" => $comment_output);   
+								   "comments" => (int)$comment_count);   
 									   				   
 			if ((int)$row['upload_locshare'] == 1 && (float)$row['upload_latitude'] != 0 && (float)$row['upload_longitude'] != 0) {
 				$timeline_location = array("latitude" => (float)$row['upload_latitude'] ,"longitude" => (float)$row['upload_longitude']);

@@ -10,6 +10,7 @@ $passed_data = json_decode(file_get_contents('php://input'), true);
 $passed_limit = (int)$_GET['limit'];
 $passed_pagenation = (int)$_GET['pagnation'];
 $passed_userid = $_GET['userid'];
+$passed_alert = (bool)$_GET['alert'];
 
 if (empty($passed_limit)) $passed_limit = 40;
 if (empty($passed_pagenation)) $passed_pagenation = 0;
@@ -26,12 +27,14 @@ if ($passed_method == 'GET') {
 		$friendship_userid = $row['user_key'];
 		$friendship_userpublic = (bool)$row['user_public'];	
 		$friendship_userpromoted = (bool)$row['user_promoted'];	
+		$friendship_notifications = (bool)$row['follow_notifications'];	
 		$friendship_user = array("userid" => $friendship_userid, 
 								 "avatar" => $friendship_avatar, 
 								 "username" => $friendship_username, 
 								 "lastactive" => $friendship_lastactive,
 								 "public" => $friendship_userpublic, 
-								 "promoted" => $friendship_userpromoted);	
+								 "promoted" => $friendship_userpromoted,
+								 "alerts" => $friendship_notifications);
 		$friendship_output[] = array("timestamp" => $row['follow_timestamp'], "user" => $friendship_user);
 		
 	}
@@ -61,7 +64,7 @@ else if ($passed_method == 'POST') {
 			$follow_exists = mysqli_num_rows($follow_query);
 			if ($follow_exists == 0) {
 				$friendship_timestamp = date('Y-m-d H:i:s');
-				$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`) VALUES (NULL, '$friendship_timestamp', '$passed_userid', '$authorized_user');");
+				$friendship_create = mysqli_query($database_connect, "INSERT INTO `follow` (`follow_id`, `follow_timestamp`, `follow_user`, `follow_owner`, `follow_notifications`) VALUES (NULL, '$friendship_timestamp', '$passed_userid', '$authorized_user', '0');");
 				if ($friendship_create) {
 					header('HTTP/1.1 200 SUCSESSFUL');
 							
@@ -77,7 +80,7 @@ else if ($passed_method == 'POST') {
 					
 				}
 				else {
-					$json_status = 'user could not be followed at this time - ' . mysqli_error($friendship_create);
+					$json_status = 'user could not be followed at this time - ' . mysqli_error($database_connect);
 					$json_output[] = array('status' => $json_status, 'error_code' => 400);
 					echo json_encode($json_output);
 					exit;
@@ -101,6 +104,39 @@ else if ($passed_method == 'POST') {
 			echo json_encode($json_output);
 			exit;
 				
+		}
+		
+	}
+	
+}
+else if ($passed_method == 'PUT') {
+	if (empty($passed_userid)) {
+		$json_status = 'user id parameter missing';
+		$json_output[] = array('status' => $json_status, 'error_code' => 422);
+		echo json_encode($json_output);
+		exit;
+		
+	}
+	else {
+		$update_query = mysqli_query($database_connect, "UPDATE `follow` SET `follow_notifications` = '$passed_alert' WHERE `follow_owner` LIKE '$authorized_user' AND `follow_user` LIKE '$passed_userid';");
+		if ($update_query) {
+			header('HTTP/1.1 200 SUCSESSFUL');
+									
+			if ($passed_alert) $alert_status = "enabled";
+			else $alert_status = "disabled";
+			
+			$json_status = 'alerts ' . $alert_status . ' for user';
+			$json_output[] = array('status' => $json_status, 'error_code' => 200);
+			echo json_encode($json_output);
+			exit;
+			
+		}
+		else {
+			$json_status = 'alerts could not be updated at this time - ' . mysqli_error($update_query);
+			$json_output[] = array('status' => $json_status, 'error_code' => 400);
+			echo json_encode($json_output);
+			exit;
+			
 		}
 		
 	}

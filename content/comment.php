@@ -55,7 +55,7 @@ if ($passed_method == 'GET') {
 			elseif ($comment_type == "public") $comment_show = true;
 			else $comment_show = false;
 			
-			if ($comment_show == true) $comment_output[] = array("key" => $comment_key, "type" => $comment_type, "user" => $comment_user_output, "comment" => $comment_content, "timestamp" => $comment_timestamp);
+			if ($comment_show == true) $comment_output[] = array("commentid" => $comment_key, "type" => $comment_type, "user" => $comment_user_output, "comment" => $comment_content, "timestamp" => $comment_timestamp);
 			
 		}
 		
@@ -105,8 +105,8 @@ else if ($passed_method == 'POST') {
 		$passed_comment = str_replace("\n", " ", $passed_comment);
 		$passed_comment = preg_replace('/\s+/', ' ',$passed_comment);
 		
-		preg_match_all("/(@\w+)/", $passed_comment, $user_mentions);
-		
+		preg_match_all("/(@(\w|.|_|-)+)/", $passed_comment, $user_mentions);
+							
 		$item_query = mysqli_query($database_connect, "SELECT `upload_key`, `upload_owner`, `upload_file` FROM `uploads` WHERE `upload_key` LIKE '$passed_item' AND `upload_removed` = 0 LIMIT 0, 1");
 		$item_exists = mysqli_num_rows($item_query);
 		$item_data = mysqli_fetch_assoc($item_query);

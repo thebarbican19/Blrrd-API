@@ -135,6 +135,15 @@ if ($passed_method == 'POST') {
 						
 					}
 					
+					$follower_query =  mysqli_query($database_connect, "SELECT `follow_owner` FROM `follow` WHERE `follow_user` LIKE '$authorized_user' AND `follow_notifications` == '1'");
+					while($follower = mysqli_fetch_array($follower_query)) {	
+						$notification_title = "*" . $authorized_username . "* uploaded a new post";						
+						$notification_user = $follower['follow_owner'];			
+						$notification_body =  "";
+						$notification_output = add_notifcation($notification_title, $notification_body, $image_file, $notification_user, "upload", $image_key, true);
+							
+					}
+					
 					$image_users_tagged = implode(",", $tagged_user_key);
 					$image_store = mysqli_query($database_connect, "INSERT INTO `uploads` (`upload_id`, `upload_timestamp`, `upload_timezone`, `upload_key`, `upload_owner`, `upload_file`, `upload_caption`,`upload_url`, `upload_tags`, `upload_latitude`, `upload_longitude`, `upload_place`, `upload_locshare`, `upload_userstagged`, `upload_device`, `upload_channel`, `upload_removed`) VALUES (NULL, '$image_timestamp', '$image_timezone', '$image_key', '$authorized_user', '$image_file', '$passed_caption', '', '$passed_tags', '$image_latitude', '$image_longitude', '', '$passed_location', '$image_users_tagged', '$image_device', '', '0');");
 					$image_output = array("key" => $image_key, "caption" => $passed_caption);
